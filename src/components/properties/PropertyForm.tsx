@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { BuildingIcon, Check, ChevronsUpDown, Home, Upload } from 'lucide-react';
+import { BuildingIcon, Check, ChevronsUpDown, Home, Upload, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -32,7 +31,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-// Definindo o schema de validação para o formulário
 const formSchema = z.object({
   name: z.string().min(3, { message: 'O nome deve ter pelo menos 3 caracteres' }),
   propertyType: z.string({ required_error: 'Por favor selecione um tipo de imóvel' }),
@@ -67,7 +65,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Lista de tipos de imóveis
 const propertyTypes = [
   { value: 'apartment', label: 'Apartamento' },
   { value: 'house', label: 'Casa' },
@@ -77,7 +74,6 @@ const propertyTypes = [
   { value: 'other', label: 'Outro' },
 ];
 
-// Lista de estados brasileiros
 const brazilianStates = [
   { value: 'AC', label: 'Acre' },
   { value: 'AL', label: 'Alagoas' },
