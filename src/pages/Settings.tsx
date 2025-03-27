@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 
+// Profile schema
 const profileFormSchema = z.object({
   name: z.string().min(2, {
     message: "Nome deve ter pelo menos 2 caracteres.",
@@ -50,6 +51,7 @@ const profileFormSchema = z.object({
   phone: z.string().optional(),
 });
 
+// Appearance schema
 const appearanceFormSchema = z.object({
   theme: z.enum(["light", "dark", "system"], {
     required_error: "Por favor selecione um tema.",
@@ -59,6 +61,7 @@ const appearanceFormSchema = z.object({
   }),
 });
 
+// Notifications schema
 const notificationsFormSchema = z.object({
   emailNotifications: z.boolean().default(true),
   pushNotifications: z.boolean().default(false),
@@ -67,12 +70,23 @@ const notificationsFormSchema = z.object({
   marketUpdates: z.boolean().default(false),
 });
 
+// Password change schema
+const passwordFormSchema = z.object({
+  currentPassword: z.string().min(1, { message: "Senha atual é obrigatória" }),
+  newPassword: z.string().min(6, { message: "Nova senha deve ter pelo menos 6 caracteres" }),
+  confirmPassword: z.string().min(1, { message: "Confirmação de senha é obrigatória" }),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"],
+});
+
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>;
 type NotificationsFormValues = z.infer<typeof notificationsFormSchema>;
+type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 const Settings = () => {
-  // Formulário de perfil
+  // Profile form
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -90,7 +104,7 @@ const Settings = () => {
     console.log(data);
   }
 
-  // Formulário de aparência
+  // Appearance form
   const appearanceForm = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceFormSchema),
     defaultValues: {
@@ -107,7 +121,7 @@ const Settings = () => {
     console.log(data);
   }
 
-  // Formulário de notificações
+  // Notifications form
   const notificationsForm = useForm<NotificationsFormValues>({
     resolver: zodResolver(notificationsFormSchema),
     defaultValues: {
@@ -123,6 +137,24 @@ const Settings = () => {
     toast({
       title: "Notificações atualizadas",
       description: "Suas preferências de notificações foram atualizadas com sucesso.",
+    });
+    console.log(data);
+  }
+
+  // Password form
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  function onPasswordSubmit(data: PasswordFormValues) {
+    toast({
+      title: "Senha atualizada",
+      description: "Sua senha foi atualizada com sucesso.",
     });
     console.log(data);
   }
@@ -216,23 +248,52 @@ const Settings = () => {
                   Atualize sua senha para manter sua conta segura.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <FormLabel>Senha Atual</FormLabel>
-                  <Input type="password" />
-                </div>
-                <div className="space-y-2">
-                  <FormLabel>Nova Senha</FormLabel>
-                  <Input type="password" />
-                </div>
-                <div className="space-y-2">
-                  <FormLabel>Confirmar Nova Senha</FormLabel>
-                  <Input type="password" />
-                </div>
+              <CardContent>
+                <Form {...passwordForm}>
+                  <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+                    <FormField
+                      control={passwordForm.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Senha Atual</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nova Senha</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmar Nova Senha</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit">Atualizar Senha</Button>
+                  </form>
+                </Form>
               </CardContent>
-              <CardFooter>
-                <Button>Atualizar Senha</Button>
-              </CardFooter>
             </Card>
           </TabsContent>
           
