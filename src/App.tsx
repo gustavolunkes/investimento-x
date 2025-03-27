@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Owners from "./pages/Owners";
+import OwnerDetails from "./pages/OwnerDetails";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/properties" element={<Properties />} />
             <Route path="/owners" element={<Owners />} />
+            <Route path="/owners/:ownerId" element={<OwnerDetails />} />
             <Route path="/incomes" element={<Incomes />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/analytics" element={<Analytics />} />

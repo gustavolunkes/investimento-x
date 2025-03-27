@@ -21,6 +21,8 @@ export interface PropertyCardProps {
   currentValue?: number;
   roi?: number;
   image?: string;
+  ownerId?: string;
+  layout?: 'grid' | 'list';
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   className?: string;
@@ -36,6 +38,8 @@ const PropertyCard = ({
   currentValue,
   roi,
   image,
+  ownerId,
+  layout = 'grid',
   onEdit,
   onDelete,
   className,
@@ -51,6 +55,73 @@ const PropertyCard = ({
     ? ((currentValue - purchaseValue) / purchaseValue) * 100
     : 0;
 
+  // Layout específico para lista
+  if (layout === 'list') {
+    return (
+      <Card className={cn("flex flex-row", className)}>
+        <div className="relative h-auto w-28 bg-muted">
+          {image ? (
+            <img 
+              src={image} 
+              alt={name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-muted">
+              <Home className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-1 justify-between">
+          <CardContent className="p-4">
+            <h3 className="text-lg font-semibold truncate">{name}</h3>
+            <div className="flex items-center text-sm text-muted-foreground mt-1">
+              <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="truncate">{address}</span>
+            </div>
+            
+            <div className="flex gap-4 mt-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Valor da compra</p>
+                <p className="font-medium">{formatCurrency(purchaseValue)}</p>
+              </div>
+              {currentValue && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Valor atual</p>
+                  <p className="font-medium">{formatCurrency(currentValue)}</p>
+                </div>
+              )}
+              {rentAmount && rentAmount > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Aluguel mensal</p>
+                  <p className="font-medium text-income">{formatCurrency(rentAmount)}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+          <div className="flex flex-col justify-center pr-4 gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onEdit && onEdit(id)}
+            >
+              Editar
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-destructive"
+              onClick={() => onDelete && onDelete(id)}
+            >
+              Excluir
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Layout padrão (grid)
   return (
     <Card className={cn("overflow-hidden", className)}>
       <div className="relative h-40 bg-muted">
@@ -90,14 +161,14 @@ const PropertyCard = ({
           )}
         </div>
         
-        {rentAmount && (
+        {rentAmount && rentAmount > 0 && (
           <div className="mt-4">
             <p className="text-xs text-muted-foreground">Aluguel mensal</p>
             <p className="font-medium text-income">{formatCurrency(rentAmount)}</p>
           </div>
         )}
         
-        {roi !== undefined && (
+        {roi !== undefined && roi > 0 && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

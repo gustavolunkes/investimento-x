@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, UserPlus } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, UserPlus, Eye } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -238,6 +238,15 @@ const Owners = () => {
                     <TableCell>{formatDate(owner.lastAccess)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          asChild
+                        >
+                          <Link to={`/owners/${owner.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
                         <Button
                           variant="outline"
                           size="icon"
