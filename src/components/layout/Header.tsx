@@ -12,12 +12,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 type HeaderProps = {
   sidebarCollapsed: boolean;
 };
 
 const Header = ({ sidebarCollapsed }: HeaderProps) => {
+  const { user, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <header className={cn(
       "bg-white border-b border-border h-16 flex items-center justify-between px-6 sticky top-0 z-10",
@@ -46,12 +51,17 @@ const Header = ({ sidebarCollapsed }: HeaderProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              <div>
+                <p className="font-semibold">{user?.name}</p>
+                <p className="text-xs text-muted-foreground">{isAdmin ? 'Administrador' : 'Proprietário'}</p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Perfil</DropdownMenuItem>
-            <DropdownMenuItem>Configurações</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>Perfil</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>Configurações</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Sair</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => logout()}>Sair</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

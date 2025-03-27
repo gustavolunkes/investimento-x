@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Grid, List } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import PropertyCard, { PropertyCardProps } from '@/components/properties/PropertyCard';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import PropertyForm from '@/components/properties/PropertyForm';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Dados de exemplo
 const exampleProperties: PropertyCardProps[] = [
@@ -26,6 +28,7 @@ const exampleProperties: PropertyCardProps[] = [
     purchaseValue: 350000,
     currentValue: 400000,
     roi: 8.57,
+    ownerId: '1',
   },
   {
     id: '2',
@@ -36,6 +39,7 @@ const exampleProperties: PropertyCardProps[] = [
     purchaseValue: 500000,
     currentValue: 550000,
     roi: 7.64,
+    ownerId: '2',
   },
   {
     id: '3',
@@ -46,6 +50,7 @@ const exampleProperties: PropertyCardProps[] = [
     purchaseValue: 280000,
     currentValue: 290000,
     roi: 8.28,
+    ownerId: '1',
   },
   {
     id: '4',
@@ -54,6 +59,7 @@ const exampleProperties: PropertyCardProps[] = [
     address: 'Rua das Palmeiras, 101 - Zona Sul',
     purchaseValue: 180000,
     currentValue: 210000,
+    ownerId: '2',
   },
   {
     id: '5',
@@ -64,6 +70,7 @@ const exampleProperties: PropertyCardProps[] = [
     currentValue: 460000,
     rentAmount: 0, // Não está alugado
     roi: 0,
+    ownerId: '1',
   },
 ];
 
@@ -72,27 +79,75 @@ const Properties = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [properties, setProperties] = useState<PropertyCardProps[]>(exampleProperties);
+  const [editingProperty, setEditingProperty] = useState<PropertyCardProps | null>(null);
+  
+  const { toast } = useToast();
+  const { user, isAdmin } = useAuth();
   
   const handleEdit = (id: string) => {
-    console.log(`Editar imóvel ${id}`);
+    const property = properties.find(p => p.id === id);
+    if (property) {
+      setEditingProperty(property);
+      setOpenDialog(true);
+    }
   };
   
   const handleDelete = (id: string) => {
-    console.log(`Excluir imóvel ${id}`);
+    if (window.confirm('Tem certeza que deseja excluir este imóvel?')) {
+      setProperties(properties.filter(p => p.id !== id));
+      toast({
+        title: 'Imóvel excluído',
+        description: 'O imóvel foi removido com sucesso.',
+      });
+    }
   };
   
   const handleFormSubmit = (data: any) => {
-    console.log('Dados do formulário:', data);
     setLoading(true);
     
     // Simula uma chamada de API
     setTimeout(() => {
+      if (editingProperty) {
+        // Atualizar propriedade existente
+        setProperties(properties.map(property => 
+          property.id === editingProperty.id ? { ...property, ...data } : property
+        ));
+        
+        toast({
+          title: 'Imóvel atualizado',
+          description: 'As informações do imóvel foram atualizadas com sucesso.',
+        });
+      } else {
+        // Adicionar nova propriedade
+        const newProperty = {
+          id: `${properties.length + 1}`,
+          ...data,
+          ownerId: user?.id || '1',
+        };
+        
+        setProperties([...properties, newProperty]);
+        
+        toast({
+          title: 'Imóvel adicionado',
+          description: 'O novo imóvel foi adicionado com sucesso.',
+        });
+      }
+      
       setLoading(false);
       setOpenDialog(false);
+      setEditingProperty(null);
     }, 1000);
   };
   
-  const filteredProperties = exampleProperties.filter((property) => {
+  // Filtra propriedades com base no tipo de usuário e no termo de busca
+  const filteredProperties = properties.filter((property) => {
+    // Primeiro filtra por proprietário se não for admin
+    if (!isAdmin && property.ownerId !== user?.id) {
+      return false;
+    }
+    
+    // Depois filtra pelo termo de busca
     const searchLower = searchTerm.toLowerCase();
     return (
       property.name.toLowerCase().includes(searchLower) ||
@@ -105,8 +160,13 @@ const Properties = () => {
     <MainLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Meus Imóveis</h1>
-          <Button onClick={() => setOpenDialog(true)} className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {isAdmin ? 'Todos os Imóveis' : 'Meus Imóveis'}
+          </h1>
+          <Button onClick={() => {
+            setEditingProperty(null);
+            setOpenDialog(true);
+          }} className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
             Adicionar Imóvel
           </Button>
@@ -123,68 +183,122 @@ const Properties = () => {
             />
           </div>
           
-          <Tabs defaultValue="all" className="w-full sm:w-auto">
-            <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="rented">Alugados</TabsTrigger>
-              <TabsTrigger value="vacant">Vagos</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex gap-4 items-center">
+            <Tabs defaultValue="all" className="w-full sm:w-auto">
+              <TabsList>
+                <TabsTrigger value="all">Todos</TabsTrigger>
+                <TabsTrigger value="rented">Alugados</TabsTrigger>
+                <TabsTrigger value="vacant">Vagos</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            <div className="flex items-center border rounded-md">
+              <Button
+                variant={view === 'grid' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setView('grid')}
+                className="rounded-r-none"
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={view === 'list' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setView('list')}
+                className="rounded-l-none"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
         
-        <TabsContent value="all" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                {...property}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="rented" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties
-              .filter(p => p.rentAmount && p.rentAmount > 0)
-              .map((property) => (
+        <Tabs defaultValue="all">
+          <TabsContent value="all" className="mt-6">
+            <div className={view === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "flex flex-col gap-4"
+            }>
+              {filteredProperties.map((property) => (
                 <PropertyCard
                   key={property.id}
                   {...property}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  layout={view}
                 />
               ))}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="vacant" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties
-              .filter(p => !p.rentAmount || p.rentAmount === 0)
-              .map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  {...property}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))}
-          </div>
-        </TabsContent>
+              {filteredProperties.length === 0 && (
+                <div className="col-span-full text-center p-12 bg-muted rounded-lg">
+                  <p className="text-muted-foreground">Nenhum imóvel encontrado</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="rented" className="mt-6">
+            <div className={view === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "flex flex-col gap-4"
+            }>
+              {filteredProperties
+                .filter(p => p.rentAmount && p.rentAmount > 0)
+                .map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    {...property}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    layout={view}
+                  />
+                ))}
+              {filteredProperties.filter(p => p.rentAmount && p.rentAmount > 0).length === 0 && (
+                <div className="col-span-full text-center p-12 bg-muted rounded-lg">
+                  <p className="text-muted-foreground">Nenhum imóvel alugado encontrado</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="vacant" className="mt-6">
+            <div className={view === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "flex flex-col gap-4"
+            }>
+              {filteredProperties
+                .filter(p => !p.rentAmount || p.rentAmount === 0)
+                .map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    {...property}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    layout={view}
+                  />
+                ))}
+              {filteredProperties.filter(p => !p.rentAmount || p.rentAmount === 0).length === 0 && (
+                <div className="col-span-full text-center p-12 bg-muted rounded-lg">
+                  <p className="text-muted-foreground">Nenhum imóvel vago encontrado</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
       
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Adicionar Novo Imóvel</DialogTitle>
+            <DialogTitle>{editingProperty ? 'Editar Imóvel' : 'Adicionar Novo Imóvel'}</DialogTitle>
             <DialogDescription>
-              Preencha os detalhes do seu novo imóvel. Todos os campos marcados com * são obrigatórios.
+              Preencha os detalhes do seu imóvel. Todos os campos marcados com * são obrigatórios.
             </DialogDescription>
           </DialogHeader>
-          <PropertyForm onSubmit={handleFormSubmit} isSubmitting={loading} />
+          <PropertyForm 
+            onSubmit={handleFormSubmit} 
+            isSubmitting={loading} 
+            initialData={editingProperty || undefined}
+          />
         </DialogContent>
       </Dialog>
     </MainLayout>

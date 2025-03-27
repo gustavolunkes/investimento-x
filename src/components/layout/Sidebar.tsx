@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   Home, 
@@ -11,9 +11,11 @@ import {
   Settings, 
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SidebarProps = {
   collapsed: boolean;
@@ -21,10 +23,17 @@ type SidebarProps = {
 };
 
 const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
+  const { user, logout, isAdmin } = useAuth();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <div 
       className={cn(
-        "bg-sidebar text-sidebar-foreground h-screen transition-all duration-300 flex flex-col border-r border-sidebar-border relative",
+        "bg-sidebar text-sidebar-foreground h-screen transition-all duration-300 flex flex-col border-r border-sidebar-border fixed z-40",
         collapsed ? "w-[80px]" : "w-[250px]"
       )}
     >
@@ -42,10 +51,25 @@ const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
         </Button>
       </div>
 
+      <div className="py-2 px-4 border-b border-sidebar-border">
+        {!collapsed && (
+          <div className="text-sm text-white">
+            <p className="font-semibold">{user?.name}</p>
+            <p className="text-xs opacity-70">{isAdmin ? 'Administrador' : 'Proprietário'}</p>
+          </div>
+        )}
+      </div>
+
       <nav className="flex-1 py-4 overflow-y-auto">
         <ul className="space-y-1 px-3">
           <SidebarItem icon={<Home className="h-5 w-5" />} label="Dashboard" path="/" collapsed={collapsed} />
           <SidebarItem icon={<Building2 className="h-5 w-5" />} label="Meus Imóveis" path="/properties" collapsed={collapsed} />
+          
+          {/* Seções específicas para administradores */}
+          {isAdmin && (
+            <SidebarItem icon={<Users className="h-5 w-5" />} label="Proprietários" path="/owners" collapsed={collapsed} />
+          )}
+          
           <SidebarItem icon={<Receipt className="h-5 w-5" />} label="Receitas" path="/incomes" collapsed={collapsed} />
           <SidebarItem icon={<Wallet className="h-5 w-5" />} label="Despesas" path="/expenses" collapsed={collapsed} />
           <SidebarItem icon={<BarChart3 className="h-5 w-5" />} label="Análises" path="/analytics" collapsed={collapsed} />
@@ -60,6 +84,7 @@ const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
             "w-full text-sidebar-foreground hover:bg-sidebar-accent flex items-center justify-start gap-3",
             collapsed && "justify-center p-2"
           )}
+          onClick={handleLogout}
         >
           <LogOut className="h-5 w-5" />
           {!collapsed && <span>Sair</span>}
@@ -77,6 +102,7 @@ type SidebarItemProps = {
 };
 
 const SidebarItem = ({ icon, label, path, collapsed }: SidebarItemProps) => {
+  const location = useLocation();
   const isActive = location.pathname === path;
 
   return (
