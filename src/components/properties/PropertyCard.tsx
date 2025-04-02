@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Building2, MapPin, TrendingUp, Home } from 'lucide-react';
+import { Building2, MapPin, TrendingUp, Home, BarChart3, Receipt, Wallet } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 export interface PropertyCardProps {
   id: string;
@@ -44,6 +45,8 @@ const PropertyCard = ({
   onDelete,
   className,
 }: PropertyCardProps) => {
+  const navigate = useNavigate();
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -54,6 +57,22 @@ const PropertyCard = ({
   const valueGrowth = currentValue && purchaseValue
     ? ((currentValue - purchaseValue) / purchaseValue) * 100
     : 0;
+    
+  const handleViewProperty = () => {
+    navigate(`/properties/${id}`);
+  };
+  
+  const handleViewIncomes = () => {
+    navigate(`/properties/${id}/incomes`);
+  };
+  
+  const handleViewExpenses = () => {
+    navigate(`/properties/${id}/expenses`);
+  };
+  
+  const handleViewAnalytics = () => {
+    navigate(`/properties/${id}/analytics`);
+  };
 
   // Layout específico para lista
   if (layout === 'list') {
@@ -103,18 +122,53 @@ const PropertyCard = ({
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => onEdit && onEdit(id)}
+              onClick={handleViewProperty}
             >
-              Editar
+              Ver detalhes
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="text-destructive"
-              onClick={() => onDelete && onDelete(id)}
-            >
-              Excluir
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleViewIncomes}
+                className="h-8 w-8 text-income"
+              >
+                <Receipt className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleViewExpenses}
+                className="h-8 w-8 text-expense"
+              >
+                <Wallet className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleViewAnalytics}
+                className="h-8 w-8"
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onEdit && onEdit(id)}
+              >
+                Editar
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-destructive"
+                onClick={() => onDelete && onDelete(id)}
+              >
+                Excluir
+              </Button>
+            </div>
           </div>
         </div>
       </Card>
@@ -140,6 +194,14 @@ const PropertyCard = ({
           <Building2 className="mr-1 h-3 w-3" />
           {type}
         </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="absolute top-3 right-3 bg-white/90"
+          onClick={handleViewProperty}
+        >
+          Ver detalhes
+        </Button>
       </div>
       <CardContent className="p-4">
         <h3 className="text-lg font-semibold truncate">{name}</h3>
@@ -198,21 +260,53 @@ const PropertyCard = ({
       </CardContent>
       
       <CardFooter className="p-4 pt-0 flex justify-between">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => onEdit && onEdit(id)}
-        >
-          Editar
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className="text-destructive"
-          onClick={() => onDelete && onDelete(id)}
-        >
-          Excluir
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleViewIncomes}
+            className="h-8 w-8 text-income"
+            title="Ver receitas"
+          >
+            <Receipt className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleViewExpenses}
+            className="h-8 w-8 text-expense"
+            title="Ver despesas"
+          >
+            <Wallet className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleViewAnalytics}
+            className="h-8 w-8"
+            title="Ver análises"
+          >
+            <BarChart3 className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onEdit && onEdit(id)}
+          >
+            Editar
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="text-destructive"
+            onClick={() => onDelete && onDelete(id)}
+          >
+            Excluir
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

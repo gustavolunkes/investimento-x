@@ -7,6 +7,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Dashboard from "./pages/Index";
 import Properties from "./pages/Properties";
+import PropertyDetails from "./pages/PropertyDetails";
+import PropertyIncomes from "./pages/PropertyIncomes";
+import PropertyExpenses from "./pages/PropertyExpenses";
+import PropertyAnalytics from "./pages/PropertyAnalytics";
 import Incomes from "./pages/Incomes";
 import Expenses from "./pages/Expenses";
 import Analytics from "./pages/Analytics";
@@ -29,6 +33,10 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Dashboard />} />
             <Route path="/properties" element={<Properties />} />
+            <Route path="/properties/:propertyId" element={<PropertyDetails />} />
+            <Route path="/properties/:propertyId/incomes" element={<PropertyIncomes />} />
+            <Route path="/properties/:propertyId/expenses" element={<PropertyExpenses />} />
+            <Route path="/properties/:propertyId/analytics" element={<PropertyAnalytics />} />
             <Route path="/owners" element={<Owners />} />
             <Route path="/owners/:ownerId" element={<OwnerDetails />} />
             <Route path="/incomes" element={<Incomes />} />
