@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Grid, List } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
@@ -24,9 +23,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Apartamento Centro',
     type: 'Apartamento',
     address: 'Rua das Flores, 123 - Centro',
-    rentAmount: 2500,
-    purchaseValue: 350000,
-    currentValue: 400000,
+    rentAmount: '2500',
+    purchaseValue: '350000',
+    currentValue: '400000',
     roi: 8.57,
     ownerId: '1',
   },
@@ -35,9 +34,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Casa Jardins',
     type: 'Casa',
     address: 'Rua dos Jardins, 456 - Jardim Primavera',
-    rentAmount: 3500,
-    purchaseValue: 500000,
-    currentValue: 550000,
+    rentAmount: '3500',
+    purchaseValue: '500000',
+    currentValue: '550000',
     roi: 7.64,
     ownerId: '2',
   },
@@ -46,9 +45,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Sala Comercial',
     type: 'Comercial',
     address: 'Av. Paulista, 789 - Centro',
-    rentAmount: 2000,
-    purchaseValue: 280000,
-    currentValue: 290000,
+    rentAmount: '2000',
+    purchaseValue: '280000',
+    currentValue: '290000',
     roi: 8.28,
     ownerId: '1',
   },
@@ -57,8 +56,8 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Terreno Zona Sul',
     type: 'Terreno',
     address: 'Rua das Palmeiras, 101 - Zona Sul',
-    purchaseValue: 180000,
-    currentValue: 210000,
+    purchaseValue: '180000',
+    currentValue: '210000',
     ownerId: '2',
   },
   {
@@ -66,9 +65,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Apartamento Praia',
     type: 'Apartamento',
     address: 'Av. Beira Mar, 555 - Praia Grande',
-    purchaseValue: 420000,
-    currentValue: 460000,
-    rentAmount: 0, // Não está alugado
+    purchaseValue: '420000',
+    currentValue: '460000',
+    rentAmount: '0', // Não está alugado
     roi: 0,
     ownerId: '1',
   },
@@ -81,6 +80,7 @@ const Properties = () => {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [properties, setProperties] = useState<PropertyCardProps[]>(exampleProperties);
   const [editingProperty, setEditingProperty] = useState<PropertyCardProps | null>(null);
+  const [activeTab, setActiveTab] = useState('all');
   
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
@@ -156,6 +156,19 @@ const Properties = () => {
     );
   });
 
+  const filterProperties = () => {
+    let filtered = filteredProperties;
+    
+    switch (activeTab) {
+      case 'rented':
+        return filtered.filter(p => p.rentAmount && Number(p.rentAmount) > 0);
+      case 'vacant':
+        return filtered.filter(p => !p.rentAmount || Number(p.rentAmount) === 0);
+      default:
+        return filtered;
+    }
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -184,7 +197,7 @@ const Properties = () => {
           </div>
           
           <div className="flex gap-4 items-center">
-            <Tabs defaultValue="all" className="w-full sm:w-auto">
+            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="all">Todos</TabsTrigger>
                 <TabsTrigger value="rented">Alugados</TabsTrigger>
@@ -214,12 +227,12 @@ const Properties = () => {
         </div>
         
         <Tabs defaultValue="all">
-          <TabsContent value="all" className="mt-6">
+          <TabsContent value={activeTab} className="mt-6">
             <div className={view === 'grid' 
               ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               : "flex flex-col gap-4"
             }>
-              {filteredProperties.map((property) => (
+              {filterProperties().map((property) => (
                 <PropertyCard
                   key={property.id}
                   {...property}
@@ -228,57 +241,9 @@ const Properties = () => {
                   layout={view}
                 />
               ))}
-              {filteredProperties.length === 0 && (
+              {filterProperties().length === 0 && (
                 <div className="col-span-full text-center p-12 bg-muted rounded-lg">
                   <p className="text-muted-foreground">Nenhum imóvel encontrado</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="rented" className="mt-6">
-            <div className={view === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "flex flex-col gap-4"
-            }>
-              {filteredProperties
-                .filter(p => p.rentAmount && p.rentAmount > 0)
-                .map((property) => (
-                  <PropertyCard
-                    key={property.id}
-                    {...property}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    layout={view}
-                  />
-                ))}
-              {filteredProperties.filter(p => p.rentAmount && p.rentAmount > 0).length === 0 && (
-                <div className="col-span-full text-center p-12 bg-muted rounded-lg">
-                  <p className="text-muted-foreground">Nenhum imóvel alugado encontrado</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="vacant" className="mt-6">
-            <div className={view === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "flex flex-col gap-4"
-            }>
-              {filteredProperties
-                .filter(p => !p.rentAmount || p.rentAmount === 0)
-                .map((property) => (
-                  <PropertyCard
-                    key={property.id}
-                    {...property}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    layout={view}
-                  />
-                ))}
-              {filteredProperties.filter(p => !p.rentAmount || p.rentAmount === 0).length === 0 && (
-                <div className="col-span-full text-center p-12 bg-muted rounded-lg">
-                  <p className="text-muted-foreground">Nenhum imóvel vago encontrado</p>
                 </div>
               )}
             </div>

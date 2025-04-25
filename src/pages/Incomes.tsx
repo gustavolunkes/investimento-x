@@ -1,8 +1,6 @@
-
 import React, { useState } from 'react';
-import { PlusCircle, Search } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
-import TransactionList, { Transaction } from '@/components/transactions/TransactionList';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -12,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import {
   ResponsiveContainer,
   BarChart,
@@ -24,71 +21,7 @@ import {
   Legend,
 } from 'recharts';
 
-// Dados de exemplo para receitas
-const incomeTransactions: Transaction[] = [
-  {
-    id: '1',
-    date: '2023-06-01',
-    amount: 2500,
-    description: 'Aluguel',
-    category: 'Receita de Aluguel',
-    type: 'income',
-    propertyId: '1',
-    propertyName: 'Apartamento Centro',
-  },
-  {
-    id: '2',
-    date: '2023-06-02',
-    amount: 1500,
-    description: 'Aluguel',
-    category: 'Receita de Aluguel',
-    type: 'income',
-    propertyId: '2',
-    propertyName: 'Casa Jardins',
-  },
-  {
-    id: '5',
-    date: '2023-06-15',
-    amount: 2000,
-    description: 'Aluguel',
-    category: 'Receita de Aluguel',
-    type: 'income',
-    propertyId: '3',
-    propertyName: 'Sala Comercial',
-  },
-  {
-    id: '6',
-    date: '2023-05-01',
-    amount: 2500,
-    description: 'Aluguel',
-    category: 'Receita de Aluguel',
-    type: 'income',
-    propertyId: '1',
-    propertyName: 'Apartamento Centro',
-  },
-  {
-    id: '7',
-    date: '2023-05-02',
-    amount: 1500,
-    description: 'Aluguel',
-    category: 'Receita de Aluguel',
-    type: 'income',
-    propertyId: '2',
-    propertyName: 'Casa Jardins',
-  },
-  {
-    id: '8',
-    date: '2023-05-15',
-    amount: 2000,
-    description: 'Aluguel',
-    category: 'Receita de Aluguel',
-    type: 'income',
-    propertyId: '3',
-    propertyName: 'Sala Comercial',
-  },
-];
-
-// Dados para o gráfico
+// Dados de exemplo para o gráfico
 const monthlyIncomeData = [
   { month: 'Jan', value: 6000 },
   { month: 'Fev', value: 6000 },
@@ -114,15 +47,7 @@ const incomeSummary = {
 
 const Incomes = () => {
   const [period, setPeriod] = useState('all');
-  const [loading, setLoading] = useState(false);
-  
-  const handleEditTransaction = (id: string) => {
-    console.log(`Editar transação ${id}`);
-  };
-  
-  const handleDeleteTransaction = (id: string) => {
-    console.log(`Excluir transação ${id}`);
-  };
+  const [loading] = useState(false);
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -248,14 +173,6 @@ const Incomes = () => {
             </div>
           </CardContent>
         </Card>
-        
-        <TransactionList 
-          transactions={incomeTransactions}
-          title="Receitas Recentes"
-          loading={loading}
-          onEdit={handleEditTransaction}
-          onDelete={handleDeleteTransaction}
-        />
       </div>
     </MainLayout>
   );

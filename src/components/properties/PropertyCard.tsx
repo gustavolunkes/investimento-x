@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Building2, MapPin, TrendingUp, Home, BarChart3, Receipt, Wallet } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -17,9 +16,9 @@ export interface PropertyCardProps {
   name: string;
   type: string;
   address: string;
-  rentAmount?: number;
-  purchaseValue: number;
-  currentValue?: number;
+  rentAmount: string;
+  purchaseValue: string;
+  currentValue?: string;
   roi?: number;
   image?: string;
   ownerId?: string;
@@ -47,11 +46,11 @@ const PropertyCard = ({
 }: PropertyCardProps) => {
   const navigate = useNavigate();
   
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: string) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value);
+    }).format(Number(value));
   };
 
   const valueGrowth = currentValue && purchaseValue
