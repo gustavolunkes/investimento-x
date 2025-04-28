@@ -15,8 +15,8 @@ import Expenses from "./pages/Expenses";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import Owners from "./pages/Owners";
-import OwnerDetails from "./pages/OwnerDetails";
+import Analytics from "./pages/Analytics";
+import PropertyAnalytics from "./pages/PropertyAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -34,10 +34,10 @@ const App = () => (
             <Route path="/properties/:propertyId" element={<PropertyDetails />} />
             <Route path="/properties/:propertyId/incomes" element={<PropertyIncomes />} />
             <Route path="/properties/:propertyId/expenses" element={<PropertyExpenses />} />
-            <Route path="/owners" element={<Owners />} />
-            <Route path="/owners/:ownerId" element={<OwnerDetails />} />
+            <Route path="/properties/:propertyId/analytics" element={<PropertyAnalytics />} />
             <Route path="/incomes" element={<Incomes />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -33,9 +33,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Apartamento Centro',
     type: 'Apartamento',
     address: 'Rua das Flores, 123 - Centro',
-    rentAmount: 2500,
-    purchaseValue: 350000,
-    currentValue: 400000,
+    rentAmount: '2500',
+    purchaseValue: '350000',
+    currentValue: '400000',
     roi: 8.57,
     ownerId: '1',
   },
@@ -44,9 +44,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Casa Jardins',
     type: 'Casa',
     address: 'Rua dos Jardins, 456 - Jardim Primavera',
-    rentAmount: 3500,
-    purchaseValue: 500000,
-    currentValue: 550000,
+    rentAmount: '3500',
+    purchaseValue: '500000',
+    currentValue: '550000',
     roi: 7.64,
     ownerId: '2',
   },
@@ -55,9 +55,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Sala Comercial',
     type: 'Comercial',
     address: 'Av. Paulista, 789 - Centro',
-    rentAmount: 2000,
-    purchaseValue: 280000,
-    currentValue: 290000,
+    rentAmount: '2000',
+    purchaseValue: '280000',
+    currentValue: '290000',
     roi: 8.28,
     ownerId: '1',
   },
@@ -66,8 +66,8 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Terreno Zona Sul',
     type: 'Terreno',
     address: 'Rua das Palmeiras, 101 - Zona Sul',
-    purchaseValue: 180000,
-    currentValue: 210000,
+    purchaseValue: '180000',
+    currentValue: '210000',
     ownerId: '2',
   },
   {
@@ -75,9 +75,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Apartamento Praia',
     type: 'Apartamento',
     address: 'Av. Beira Mar, 555 - Praia Grande',
-    purchaseValue: 420000,
-    currentValue: 460000,
-    rentAmount: 0,
+    purchaseValue: '420000',
+    currentValue: '460000',
+    rentAmount: '0',
     roi: 0,
     ownerId: '1',
   },
@@ -211,6 +211,18 @@ const OwnerDetails = () => {
     );
   });
 
+  // Helper function to parse values safely
+  const parseValue = (value: string | number | undefined): number => {
+    if (value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    return parseFloat(value) || 0;
+  };
+
+  // Helper function for checking if property is rented
+  const isRented = (property: PropertyCardProps): boolean => {
+    return parseValue(property.rentAmount) > 0;
+  };
+
   if (!owner) {
     return (
       <MainLayout requireAdmin>
@@ -325,7 +337,7 @@ const OwnerDetails = () => {
                     : "flex flex-col gap-4"
                   }>
                     {filteredProperties
-                      .filter(p => p.rentAmount && p.rentAmount > 0)
+                      .filter(p => isRented(p))
                       .map((property) => (
                         <PropertyCard
                           key={property.id}
@@ -335,7 +347,7 @@ const OwnerDetails = () => {
                           onDelete={handleDelete}
                         />
                       ))}
-                    {filteredProperties.filter(p => p.rentAmount && p.rentAmount > 0).length === 0 && (
+                    {filteredProperties.filter(p => isRented(p)).length === 0 && (
                       <div className="col-span-full text-center p-12 bg-muted rounded-lg">
                         <p className="text-muted-foreground">Nenhum imóvel alugado encontrado</p>
                       </div>
@@ -349,7 +361,7 @@ const OwnerDetails = () => {
                     : "flex flex-col gap-4"
                   }>
                     {filteredProperties
-                      .filter(p => !p.rentAmount || p.rentAmount === 0)
+                      .filter(p => !isRented(p))
                       .map((property) => (
                         <PropertyCard
                           key={property.id}
@@ -359,7 +371,7 @@ const OwnerDetails = () => {
                           onDelete={handleDelete}
                         />
                       ))}
-                    {filteredProperties.filter(p => !p.rentAmount || p.rentAmount === 0).length === 0 && (
+                    {filteredProperties.filter(p => !isRented(p)).length === 0 && (
                       <div className="col-span-full text-center p-12 bg-muted rounded-lg">
                         <p className="text-muted-foreground">Nenhum imóvel vago encontrado</p>
                       </div>
@@ -382,11 +394,25 @@ const OwnerDetails = () => {
                 <CardContent>
                   <PropertyOverview 
                     totalProperties={properties.length} 
-                    totalValue={properties.reduce((sum, prop) => sum + prop.purchaseValue, 0)}
-                    occupancyRate={Math.round((properties.filter(p => p.rentAmount && p.rentAmount > 0).length / properties.length) * 100) || 0}
-                    monthlyIncome={properties.reduce((sum, prop) => sum + (prop.rentAmount || 0), 0)}
-                    annualReturn={properties.filter(p => p.roi).reduce((sum, prop) => sum + (prop.roi || 0), 0) / (properties.filter(p => p.roi).length || 1)}
-                    valueGrowth={properties.filter(p => p.currentValue).reduce((sum, prop) => sum + ((prop.currentValue || 0) - prop.purchaseValue), 0) / properties.filter(p => p.currentValue).reduce((sum, prop) => sum + prop.purchaseValue, 0) * 100 || 0}
+                    totalValue={properties.reduce((sum, prop) => sum + parseValue(prop.purchaseValue), 0)}
+                    occupancyRate={properties.length > 0 ? 
+                      Math.round((properties.filter(p => isRented(p)).length / properties.length) * 100) : 0}
+                    monthlyIncome={properties.reduce((sum, prop) => sum + parseValue(prop.rentAmount), 0)}
+                    annualReturn={
+                      properties.filter(p => typeof p.roi === 'number').length > 0 ? 
+                      properties.reduce((sum, prop) => sum + (typeof prop.roi === 'number' ? prop.roi : 0), 0) / 
+                      properties.filter(p => typeof p.roi === 'number').length : 0
+                    }
+                    valueGrowth={
+                      properties.filter(p => p.currentValue).reduce(
+                        (sum, prop) => sum + (parseValue(prop.currentValue) - parseValue(prop.purchaseValue)), 
+                        0
+                      ) / 
+                      properties.filter(p => p.currentValue).reduce(
+                        (sum, prop) => sum + parseValue(prop.purchaseValue), 
+                        1
+                      ) * 100 || 0
+                    }
                     loading={loading}
                   />
                 </CardContent>

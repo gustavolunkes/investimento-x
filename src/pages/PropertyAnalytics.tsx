@@ -30,9 +30,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Apartamento Centro',
     type: 'Apartamento',
     address: 'Rua das Flores, 123 - Centro',
-    rentAmount: 2500,
-    purchaseValue: 350000,
-    currentValue: 400000,
+    rentAmount: '2500',
+    purchaseValue: '350000',
+    currentValue: '400000',
     roi: 8.57,
     ownerId: '1',
   },
@@ -41,9 +41,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Casa Jardins',
     type: 'Casa',
     address: 'Rua dos Jardins, 456 - Jardim Primavera',
-    rentAmount: 3500,
-    purchaseValue: 500000,
-    currentValue: 550000,
+    rentAmount: '3500',
+    purchaseValue: '500000',
+    currentValue: '550000',
     roi: 7.64,
     ownerId: '2',
   },
@@ -52,9 +52,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Sala Comercial',
     type: 'Comercial',
     address: 'Av. Paulista, 789 - Centro',
-    rentAmount: 2000,
-    purchaseValue: 280000,
-    currentValue: 290000,
+    rentAmount: '2000',
+    purchaseValue: '280000',
+    currentValue: '290000',
     roi: 8.28,
     ownerId: '1',
   },
@@ -109,6 +109,13 @@ const PropertyAnalytics = () => {
   
   // Encontra a propriedade pelo ID
   const property = exampleProperties.find(p => p.id === propertyId);
+  
+  // Helper function to parse values safely
+  const parseValue = (value: string | number | undefined): number => {
+    if (value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    return parseFloat(value) || 0;
+  };
   
   if (!property) {
     return (
@@ -167,7 +174,7 @@ const PropertyAnalytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(property.currentValue || property.purchaseValue)}
+                {formatCurrency(parseValue(property.currentValue || property.purchaseValue))}
               </div>
             </CardContent>
           </Card>
@@ -373,32 +380,32 @@ const PropertyAnalytics = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Valor Investido</h3>
-                  <p className="text-lg font-medium mt-1">{formatCurrency(property.purchaseValue)}</p>
+                  <p className="text-lg font-medium mt-1">{formatCurrency(parseValue(property.purchaseValue))}</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Valor de Mercado Atual</h3>
-                  <p className="text-lg font-medium mt-1">{formatCurrency(property.currentValue || property.purchaseValue)}</p>
+                  <p className="text-lg font-medium mt-1">{formatCurrency(parseValue(property.currentValue || property.purchaseValue))}</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Receita Anual Bruta</h3>
                   <p className="text-lg font-medium text-income mt-1">
-                    {formatCurrency((property.rentAmount || 0) * 12)}
+                    {formatCurrency(parseValue(property.rentAmount) * 12)}
                   </p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Despesas Anuais Estimadas</h3>
                   <p className="text-lg font-medium text-expense mt-1">
-                    {formatCurrency((property.rentAmount || 0) * 0.3 * 12)}
+                    {formatCurrency(parseValue(property.rentAmount) * 0.3 * 12)}
                   </p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Receita Anual Líquida</h3>
                   <p className="text-lg font-medium text-income mt-1">
-                    {formatCurrency((property.rentAmount || 0) * 0.7 * 12)}
+                    {formatCurrency(parseValue(property.rentAmount) * 0.7 * 12)}
                   </p>
                 </div>
                 
@@ -406,7 +413,7 @@ const PropertyAnalytics = () => {
                   <h3 className="text-sm font-medium text-muted-foreground">Ganho de Capital</h3>
                   <p className="text-lg font-medium text-income mt-1">
                     {property.currentValue ? 
-                      formatCurrency(property.currentValue - property.purchaseValue) :
+                      formatCurrency(parseValue(property.currentValue) - parseValue(property.purchaseValue)) :
                       "Sem dados suficientes"}
                   </p>
                 </div>
@@ -416,7 +423,7 @@ const PropertyAnalytics = () => {
                 <h3 className="text-sm font-medium text-muted-foreground">Análise de Retorno</h3>
                 <p className="text-sm mt-2">
                   O imóvel {property.name} apresenta um retorno anual de {property.roi?.toFixed(2) || 0}% sobre o valor investido,
-                  considerando o aluguel mensal de {formatCurrency(property.rentAmount || 0)}. 
+                  considerando o aluguel mensal de {formatCurrency(parseValue(property.rentAmount))}. 
                   O valor de mercado atual representa uma valorização de {propertyStats.annualGrowthRate}% desde a compra.
                 </p>
                 <p className="text-sm mt-2">
