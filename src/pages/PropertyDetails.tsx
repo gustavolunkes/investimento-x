@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Building2, MapPin, Edit, Trash2, ArrowLeft, Receipt, Wallet, BarChart3 } from 'lucide-react';
+import { Building2, MapPin, Edit, Trash2, ArrowLeft, Receipt, Wallet, Tags } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import PropertyForm from '@/components/properties/PropertyForm';
+import LiquidatePropertyModal from '@/components/properties/LiquidatePropertyModal';
 import { useToast } from '@/components/ui/use-toast';
 import { PropertyCardProps } from '@/components/properties/PropertyCard';
 
@@ -18,9 +19,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Apartamento Centro',
     type: 'Apartamento',
     address: 'Rua das Flores, 123 - Centro',
-    rentAmount: 2500,
-    purchaseValue: 350000,
-    currentValue: 400000,
+    rentAmount: '2500',
+    purchaseValue: '350000',
+    currentValue: '400000',
     roi: 8.57,
     ownerId: '1',
   },
@@ -29,9 +30,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Casa Jardins',
     type: 'Casa',
     address: 'Rua dos Jardins, 456 - Jardim Primavera',
-    rentAmount: 3500,
-    purchaseValue: 500000,
-    currentValue: 550000,
+    rentAmount: '3500',
+    purchaseValue: '500000',
+    currentValue: '550000',
     roi: 7.64,
     ownerId: '2',
   },
@@ -40,9 +41,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Sala Comercial',
     type: 'Comercial',
     address: 'Av. Paulista, 789 - Centro',
-    rentAmount: 2000,
-    purchaseValue: 280000,
-    currentValue: 290000,
+    rentAmount: '2000',
+    purchaseValue: '280000',
+    currentValue: '290000',
     roi: 8.28,
     ownerId: '1',
   },
@@ -51,8 +52,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Terreno Zona Sul',
     type: 'Terreno',
     address: 'Rua das Palmeiras, 101 - Zona Sul',
-    purchaseValue: 180000,
-    currentValue: 210000,
+    purchaseValue: '180000',
+    currentValue: '210000',
+    rentAmount: '0',
     ownerId: '2',
   },
   {
@@ -60,9 +62,9 @@ const exampleProperties: PropertyCardProps[] = [
     name: 'Apartamento Praia',
     type: 'Apartamento',
     address: 'Av. Beira Mar, 555 - Praia Grande',
-    purchaseValue: 420000,
-    currentValue: 460000,
-    rentAmount: 0,
+    purchaseValue: '420000',
+    currentValue: '460000',
+    rentAmount: '0',
     roi: 0,
     ownerId: '1',
   },
@@ -75,6 +77,7 @@ const PropertyDetails = () => {
   
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showLiquidateModal, setShowLiquidateModal] = useState(false);
   
   // Encontra a propriedade pelo ID
   const property = exampleProperties.find(p => p.id === propertyId);
@@ -92,11 +95,12 @@ const PropertyDetails = () => {
     );
   }
   
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: string | number) => {
+    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value);
+    }).format(numericValue);
   };
   
   const handleDelete = () => {
@@ -124,8 +128,24 @@ const PropertyDetails = () => {
     }, 1000);
   };
 
+  const handleLiquidateConfirm = (data: any) => {
+    setLoading(true);
+    
+    // Simula uma chamada de API
+    setTimeout(() => {
+      toast({
+        title: 'Imóvel liquidado',
+        description: `O imóvel ${property.name} foi vendido por ${formatCurrency(data.saleValue)} com lucro líquido de ${formatCurrency(data.netProfit)}.`,
+      });
+      
+      setLoading(false);
+      setShowLiquidateModal(false);
+      navigate('/properties');
+    }, 1000);
+  };
+
   const valueGrowth = property.currentValue && property.purchaseValue
-    ? ((property.currentValue - property.purchaseValue) / property.purchaseValue) * 100
+    ? ((parseFloat(String(property.currentValue)) - parseFloat(String(property.purchaseValue))) / parseFloat(String(property.purchaseValue))) * 100
     : 0;
   
   return (
@@ -146,10 +166,6 @@ const PropertyDetails = () => {
             <Button variant="outline" onClick={() => navigate(`/properties/${propertyId}/expenses`)} className="flex items-center gap-2">
               <Wallet className="h-4 w-4 text-expense" />
               <span>Despesas</span>
-            </Button>
-            <Button variant="outline" onClick={() => navigate(`/properties/${propertyId}/analytics`)} className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              <span>Análises</span>
             </Button>
             <Button variant="outline" onClick={() => setOpenDialog(true)} className="flex items-center gap-2">
               <Edit className="h-4 w-4" />
@@ -210,7 +226,7 @@ const PropertyDetails = () => {
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground">Aluguel Mensal</h3>
                       <p className="text-lg font-medium text-income mt-1">
-                        {property.rentAmount > 0 
+                        {parseFloat(String(property.rentAmount)) > 0 
                           ? formatCurrency(property.rentAmount) 
                           : 'Não alugado'}
                       </p>
@@ -224,6 +240,17 @@ const PropertyDetails = () => {
                     <p className="text-lg font-medium text-income mt-1">{property.roi.toFixed(2)}% ao ano</p>
                   </div>
                 )}
+
+                <Separator />
+
+                <Button 
+                  onClick={() => setShowLiquidateModal(true)} 
+                  className="w-full text-black bg-white border-black hover:bg-black hover:text-white"
+                  variant="outline"
+                >
+                  <Tags className="h-5 w-5 mr-2" />
+                  Liquidar este imóvel
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -237,8 +264,8 @@ const PropertyDetails = () => {
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Receita Anual (Estimada)</h3>
                   <p className="text-lg font-medium text-income mt-1">
-                    {property.rentAmount && property.rentAmount > 0 
-                      ? formatCurrency(property.rentAmount * 12) 
+                    {parseFloat(String(property.rentAmount)) > 0 
+                      ? formatCurrency(parseFloat(String(property.rentAmount)) * 12) 
                       : 'R$ 0,00'}
                   </p>
                 </div>
@@ -246,8 +273,8 @@ const PropertyDetails = () => {
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Despesas Anuais (Estimadas)</h3>
                   <p className="text-lg font-medium text-expense mt-1">
-                    {property.rentAmount && property.rentAmount > 0 
-                      ? formatCurrency(property.rentAmount * 0.3 * 12) 
+                    {parseFloat(String(property.rentAmount)) > 0 
+                      ? formatCurrency(parseFloat(String(property.rentAmount)) * 0.3 * 12) 
                       : 'R$ 0,00'}
                   </p>
                 </div>
@@ -257,8 +284,8 @@ const PropertyDetails = () => {
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Lucro Líquido Anual (Estimado)</h3>
                   <p className="text-lg font-medium mt-1">
-                    {property.rentAmount && property.rentAmount > 0 
-                      ? formatCurrency(property.rentAmount * 0.7 * 12) 
+                    {parseFloat(String(property.rentAmount)) > 0 
+                      ? formatCurrency(parseFloat(String(property.rentAmount)) * 0.7 * 12) 
                       : 'R$ 0,00'}
                   </p>
                 </div>
@@ -273,10 +300,6 @@ const PropertyDetails = () => {
                   <Button variant="default" size="sm" className="w-full" onClick={() => navigate(`/properties/${propertyId}/expenses`)}>
                     <Wallet className="h-4 w-4 mr-2" />
                     Ver Despesas
-                  </Button>
-                  <Button variant="default" size="sm" className="w-full" onClick={() => navigate(`/properties/${propertyId}/analytics`)}>
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Ver Análises
                   </Button>
                 </div>
               </div>
@@ -300,6 +323,15 @@ const PropertyDetails = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {showLiquidateModal && (
+        <LiquidatePropertyModal
+          property={property}
+          open={showLiquidateModal}
+          onOpenChange={setShowLiquidateModal}
+          onConfirm={handleLiquidateConfirm}
+        />
+      )}
     </MainLayout>
   );
 };

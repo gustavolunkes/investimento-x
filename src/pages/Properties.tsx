@@ -13,9 +13,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import PropertyForm from '@/components/properties/PropertyForm';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import LiquidatePropertyModal from '@/components/properties/LiquidatePropertyModal';
 
 // Dados de exemplo
 const exampleProperties: PropertyCardProps[] = [
@@ -83,6 +84,7 @@ const Properties = () => {
   const [properties, setProperties] = useState<PropertyCardProps[]>(exampleProperties);
   const [editingProperty, setEditingProperty] = useState<PropertyCardProps | null>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [liquidateProperty, setLiquidateProperty] = useState<PropertyCardProps | null>(null);
   
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
@@ -103,6 +105,39 @@ const Properties = () => {
         description: 'O imóvel foi removido com sucesso.',
       });
     }
+  };
+  
+  const handleLiquidate = (id: string) => {
+    const property = properties.find(p => p.id === id);
+    if (property) {
+      setLiquidateProperty(property);
+    }
+  };
+  
+  const handleLiquidateConfirm = (data: any) => {
+    setLoading(true);
+    
+    // Simula uma chamada de API
+    setTimeout(() => {
+      if (liquidateProperty) {
+        // Remove a propriedade da lista
+        setProperties(properties.filter(p => p.id !== liquidateProperty.id));
+        
+        toast({
+          title: 'Imóvel liquidado',
+          description: `O imóvel ${liquidateProperty.name} foi vendido por ${new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          }).format(data.saleValue)} com lucro líquido de ${new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          }).format(data.netProfit)}.`,
+        });
+      }
+      
+      setLoading(false);
+      setLiquidateProperty(null);
+    }, 1000);
   };
   
   const handleFormSubmit = (data: any) => {
@@ -238,6 +273,7 @@ const Properties = () => {
               {...property}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onLiquidate={handleLiquidate}
               layout={view}
             />
           ))}
@@ -264,6 +300,19 @@ const Properties = () => {
           />
         </DialogContent>
       </Dialog>
+      
+      {liquidateProperty && (
+        <LiquidatePropertyModal
+          property={liquidateProperty}
+          open={!!liquidateProperty}
+          onOpenChange={(open) => {
+            if (!open) {
+              setLiquidateProperty(null);
+            }
+          }}
+          onConfirm={handleLiquidateConfirm}
+        />
+      )}
     </MainLayout>
   );
 };

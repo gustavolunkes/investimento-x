@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Building2, MapPin, TrendingUp, Home, BarChart3, Receipt, Wallet } from 'lucide-react';
+import { Building2, MapPin, TrendingUp, Home, BarChart3, Receipt, Wallet, Trash2, Tags } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +26,7 @@ export interface PropertyCardProps {
   layout?: 'grid' | 'list';
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onLiquidate?: (id: string) => void;
   className?: string;
 }
 
@@ -43,6 +44,7 @@ const PropertyCard = ({
   layout = 'grid',
   onEdit,
   onDelete,
+  onLiquidate,
   className,
 }: PropertyCardProps) => {
   const navigate = useNavigate();
@@ -69,10 +71,6 @@ const PropertyCard = ({
   
   const handleViewExpenses = () => {
     navigate(`/properties/${id}/expenses`);
-  };
-  
-  const handleViewAnalytics = () => {
-    navigate(`/properties/${id}/analytics`);
   };
 
   // Layout específico para lista
@@ -162,6 +160,15 @@ const PropertyCard = ({
                 Excluir
               </Button>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="mt-2 text-black bg-white border-black hover:bg-black hover:text-white"
+              onClick={() => onLiquidate && onLiquidate(id)}
+            >
+              <Tags className="h-4 w-4 mr-2" />
+              Liquidar
+            </Button>
           </div>
         </div>
       </Card>
@@ -252,45 +259,57 @@ const PropertyCard = ({
         )}
       </CardContent>
       
-      <CardFooter className="p-4 pt-0 flex justify-between">
-        <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleViewIncomes}
-            className="h-8 w-8 text-income"
-            title="Ver receitas"
-          >
-            <Receipt className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleViewExpenses}
-            className="h-8 w-8 text-expense"
-            title="Ver despesas"
-          >
-            <Wallet className="h-4 w-4" />
-          </Button>
+      <CardFooter className="p-4 pt-0 flex flex-col gap-2">
+        <div className="flex justify-between w-full">
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={handleViewIncomes}
+              className="h-8 w-8 text-income"
+              title="Ver receitas"
+            >
+              <Receipt className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={handleViewExpenses}
+              className="h-8 w-8 text-expense"
+              title="Ver despesas"
+            >
+              <Wallet className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onEdit && onEdit(id)}
+            >
+              Editar
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-destructive"
+              onClick={() => onDelete && onDelete(id)}
+            >
+              Excluir
+            </Button>
+          </div>
         </div>
         
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onEdit && onEdit(id)}
-          >
-            Editar
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="text-destructive"
-            onClick={() => onDelete && onDelete(id)}
-          >
-            Excluir
-          </Button>
-        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="w-full text-black bg-white border-black hover:bg-black hover:text-white"
+          onClick={() => onLiquidate && onLiquidate(id)}
+        >
+          <Tags className="h-4 w-4 mr-2" />
+          Liquidar Imóvel
+        </Button>
       </CardFooter>
     </Card>
   );
