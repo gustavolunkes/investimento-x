@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Grid, List } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
@@ -128,10 +127,10 @@ const Properties = () => {
           description: `O imóvel ${liquidateProperty.name} foi vendido por ${new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL',
-          }).format(data.saleValue)} com lucro líquido de ${new Intl.NumberFormat('pt-BR', {
+          }).format(parseFloat(data.saleValue))} com lucro líquido de ${new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL',
-          }).format(data.netProfit)}.`,
+          }).format(parseFloat(data.netProfit))}.`,
         });
       }
       
@@ -198,9 +197,9 @@ const Properties = () => {
     
     switch (activeTab) {
       case 'rented':
-        return filtered.filter(p => p.rentAmount && parseFloat(String(p.rentAmount)) > 0);
+        return filtered.filter(p => p.rentAmount && parseFloat(p.rentAmount) > 0);
       case 'vacant':
-        return filtered.filter(p => !p.rentAmount || parseFloat(String(p.rentAmount)) === 0);
+        return filtered.filter(p => !p.rentAmount || parseFloat(p.rentAmount) === 0);
       default:
         return filtered;
     }

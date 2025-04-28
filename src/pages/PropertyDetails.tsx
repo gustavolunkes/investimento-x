@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Building2, MapPin, Edit, Trash2, ArrowLeft, Receipt, Wallet, Tags } from 'lucide-react';
@@ -95,8 +94,8 @@ const PropertyDetails = () => {
     );
   }
   
-  const formatCurrency = (value: string | number) => {
-    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+  const formatCurrency = (value: string) => {
+    const numericValue = parseFloat(value);
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
@@ -145,7 +144,7 @@ const PropertyDetails = () => {
   };
 
   const valueGrowth = property.currentValue && property.purchaseValue
-    ? ((parseFloat(String(property.currentValue)) - parseFloat(String(property.purchaseValue))) / parseFloat(String(property.purchaseValue))) * 100
+    ? ((parseFloat(property.currentValue) - parseFloat(property.purchaseValue)) / parseFloat(property.purchaseValue)) * 100
     : 0;
   
   return (
@@ -226,7 +225,7 @@ const PropertyDetails = () => {
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground">Aluguel Mensal</h3>
                       <p className="text-lg font-medium text-income mt-1">
-                        {parseFloat(String(property.rentAmount)) > 0 
+                        {parseFloat(property.rentAmount) > 0 
                           ? formatCurrency(property.rentAmount) 
                           : 'Não alugado'}
                       </p>
@@ -264,8 +263,8 @@ const PropertyDetails = () => {
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Receita Anual (Estimada)</h3>
                   <p className="text-lg font-medium text-income mt-1">
-                    {parseFloat(String(property.rentAmount)) > 0 
-                      ? formatCurrency(parseFloat(String(property.rentAmount)) * 12) 
+                    {parseFloat(property.rentAmount) > 0 
+                      ? formatCurrency((parseFloat(property.rentAmount) * 12).toString()) 
                       : 'R$ 0,00'}
                   </p>
                 </div>
@@ -273,8 +272,8 @@ const PropertyDetails = () => {
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Despesas Anuais (Estimadas)</h3>
                   <p className="text-lg font-medium text-expense mt-1">
-                    {parseFloat(String(property.rentAmount)) > 0 
-                      ? formatCurrency(parseFloat(String(property.rentAmount)) * 0.3 * 12) 
+                    {parseFloat(property.rentAmount) > 0 
+                      ? formatCurrency((parseFloat(property.rentAmount) * 0.3 * 12).toString()) 
                       : 'R$ 0,00'}
                   </p>
                 </div>
@@ -284,8 +283,8 @@ const PropertyDetails = () => {
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Lucro Líquido Anual (Estimado)</h3>
                   <p className="text-lg font-medium mt-1">
-                    {parseFloat(String(property.rentAmount)) > 0 
-                      ? formatCurrency(parseFloat(String(property.rentAmount)) * 0.7 * 12) 
+                    {parseFloat(property.rentAmount) > 0 
+                      ? formatCurrency((parseFloat(property.rentAmount) * 0.7 * 12).toString()) 
                       : 'R$ 0,00'}
                   </p>
                 </div>

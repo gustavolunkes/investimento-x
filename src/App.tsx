@@ -18,7 +18,14 @@ import Login from "./pages/Login";
 import Analytics from "./pages/Analytics";
 import PropertyAnalytics from "./pages/PropertyAnalytics";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

@@ -17,9 +17,9 @@ export interface PropertyCardProps {
   name: string;
   type: string;
   address: string;
-  rentAmount?: string | number;
-  purchaseValue: string | number;
-  currentValue?: string | number;
+  rentAmount?: string;  // Changed from string | number to just string
+  purchaseValue: string;  // Changed from string | number to just string
+  currentValue?: string;  // Changed from string | number to just string
   roi?: number;
   image?: string;
   ownerId?: string;
@@ -49,8 +49,8 @@ const PropertyCard = ({
 }: PropertyCardProps) => {
   const navigate = useNavigate();
   
-  const formatCurrency = (value: string | number) => {
-    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+  const formatCurrency = (value: string) => {
+    const numericValue = parseFloat(value);
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
@@ -58,7 +58,7 @@ const PropertyCard = ({
   };
 
   const valueGrowth = currentValue && purchaseValue
-    ? ((parseFloat(String(currentValue)) - parseFloat(String(purchaseValue))) / parseFloat(String(purchaseValue))) * 100
+    ? ((parseFloat(currentValue) - parseFloat(purchaseValue)) / parseFloat(purchaseValue)) * 100
     : 0;
     
   const handleViewProperty = () => {
@@ -109,7 +109,7 @@ const PropertyCard = ({
                   <p className="font-medium">{formatCurrency(currentValue)}</p>
                 </div>
               )}
-              {rentAmount && parseFloat(String(rentAmount)) > 0 && (
+              {rentAmount && parseFloat(rentAmount) > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground">Aluguel mensal</p>
                   <p className="font-medium text-income">{formatCurrency(rentAmount)}</p>
@@ -223,7 +223,7 @@ const PropertyCard = ({
           )}
         </div>
         
-        {rentAmount && parseFloat(String(rentAmount)) > 0 && (
+        {rentAmount && parseFloat(rentAmount) > 0 && (
           <div className="mt-4">
             <p className="text-xs text-muted-foreground">Aluguel mensal</p>
             <p className="font-medium text-income">{formatCurrency(rentAmount)}</p>
