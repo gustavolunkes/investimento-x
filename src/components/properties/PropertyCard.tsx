@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Building2, MapPin, TrendingUp, Home, BarChart3, Receipt, Wallet } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -16,9 +17,9 @@ export interface PropertyCardProps {
   name: string;
   type: string;
   address: string;
-  rentAmount: string;
-  purchaseValue: string;
-  currentValue?: string;
+  rentAmount?: string | number;
+  purchaseValue: string | number;
+  currentValue?: string | number;
   roi?: number;
   image?: string;
   ownerId?: string;
@@ -46,15 +47,16 @@ const PropertyCard = ({
 }: PropertyCardProps) => {
   const navigate = useNavigate();
   
-  const formatCurrency = (value: string) => {
+  const formatCurrency = (value: string | number) => {
+    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(Number(value));
+    }).format(numericValue);
   };
 
   const valueGrowth = currentValue && purchaseValue
-    ? ((currentValue - purchaseValue) / purchaseValue) * 100
+    ? ((parseFloat(String(currentValue)) - parseFloat(String(purchaseValue))) / parseFloat(String(purchaseValue))) * 100
     : 0;
     
   const handleViewProperty = () => {
@@ -109,7 +111,7 @@ const PropertyCard = ({
                   <p className="font-medium">{formatCurrency(currentValue)}</p>
                 </div>
               )}
-              {rentAmount && rentAmount > 0 && (
+              {rentAmount && parseFloat(String(rentAmount)) > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground">Aluguel mensal</p>
                   <p className="font-medium text-income">{formatCurrency(rentAmount)}</p>
@@ -141,14 +143,6 @@ const PropertyCard = ({
                 className="h-8 w-8 text-expense"
               >
                 <Wallet className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handleViewAnalytics}
-                className="h-8 w-8"
-              >
-                <BarChart3 className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex gap-2">
@@ -222,7 +216,7 @@ const PropertyCard = ({
           )}
         </div>
         
-        {rentAmount && rentAmount > 0 && (
+        {rentAmount && parseFloat(String(rentAmount)) > 0 && (
           <div className="mt-4">
             <p className="text-xs text-muted-foreground">Aluguel mensal</p>
             <p className="font-medium text-income">{formatCurrency(rentAmount)}</p>
@@ -277,15 +271,6 @@ const PropertyCard = ({
             title="Ver despesas"
           >
             <Wallet className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleViewAnalytics}
-            className="h-8 w-8"
-            title="Ver análises"
-          >
-            <BarChart3 className="h-4 w-4" />
           </Button>
         </div>
         

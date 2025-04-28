@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Grid, List } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
@@ -58,6 +59,7 @@ const exampleProperties: PropertyCardProps[] = [
     address: 'Rua das Palmeiras, 101 - Zona Sul',
     purchaseValue: '180000',
     currentValue: '210000',
+    rentAmount: '0',
     ownerId: '2',
   },
   {
@@ -67,7 +69,7 @@ const exampleProperties: PropertyCardProps[] = [
     address: 'Av. Beira Mar, 555 - Praia Grande',
     purchaseValue: '420000',
     currentValue: '460000',
-    rentAmount: '0', // Não está alugado
+    rentAmount: '0',
     roi: 0,
     ownerId: '1',
   },
@@ -161,9 +163,9 @@ const Properties = () => {
     
     switch (activeTab) {
       case 'rented':
-        return filtered.filter(p => p.rentAmount && Number(p.rentAmount) > 0);
+        return filtered.filter(p => p.rentAmount && parseFloat(String(p.rentAmount)) > 0);
       case 'vacant':
-        return filtered.filter(p => !p.rentAmount || Number(p.rentAmount) === 0);
+        return filtered.filter(p => !p.rentAmount || parseFloat(String(p.rentAmount)) === 0);
       default:
         return filtered;
     }
@@ -226,29 +228,25 @@ const Properties = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="all">
-          <TabsContent value={activeTab} className="mt-6">
-            <div className={view === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "flex flex-col gap-4"
-            }>
-              {filterProperties().map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  {...property}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  layout={view}
-                />
-              ))}
-              {filterProperties().length === 0 && (
-                <div className="col-span-full text-center p-12 bg-muted rounded-lg">
-                  <p className="text-muted-foreground">Nenhum imóvel encontrado</p>
-                </div>
-              )}
+        <div className={view === 'grid' 
+          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          : "flex flex-col gap-4"
+        }>
+          {filterProperties().map((property) => (
+            <PropertyCard
+              key={property.id}
+              {...property}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              layout={view}
+            />
+          ))}
+          {filterProperties().length === 0 && (
+            <div className="col-span-full text-center p-12 bg-muted rounded-lg">
+              <p className="text-muted-foreground">Nenhum imóvel encontrado</p>
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </div>
       
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>

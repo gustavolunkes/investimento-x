@@ -10,10 +10,8 @@ import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
 import PropertyIncomes from "./pages/PropertyIncomes";
 import PropertyExpenses from "./pages/PropertyExpenses";
-import PropertyAnalytics from "./pages/PropertyAnalytics";
 import Incomes from "./pages/Incomes";
 import Expenses from "./pages/Expenses";
-import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -36,12 +34,10 @@ const App = () => (
             <Route path="/properties/:propertyId" element={<PropertyDetails />} />
             <Route path="/properties/:propertyId/incomes" element={<PropertyIncomes />} />
             <Route path="/properties/:propertyId/expenses" element={<PropertyExpenses />} />
-            <Route path="/properties/:propertyId/analytics" element={<PropertyAnalytics />} />
             <Route path="/owners" element={<Owners />} />
             <Route path="/owners/:ownerId" element={<OwnerDetails />} />
             <Route path="/incomes" element={<Incomes />} />
             <Route path="/expenses" element={<Expenses />} />
-            <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
