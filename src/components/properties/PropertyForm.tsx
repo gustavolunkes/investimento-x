@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { BuildingIcon, Check, ChevronsUpDown, Home, Upload, MapPin } from 'lucide-react';
+import { Check, ChevronsUpDown, Home, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -14,7 +15,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -33,7 +33,12 @@ import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'O nome deve ter pelo menos 3 caracteres' }),
-  propertyType: z.string({ required_error: 'Por favor selecione um tipo de imóvel' }),
+  registrationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { 
+    message: 'Formato de data inválido. Use AAAA-MM-DD' 
+  }),
+  registrationValue: z.string().refine(value => !isNaN(Number(value)) && Number(value) > 0, {
+    message: 'O valor da matrícula deve ser um número positivo',
+  }),
   acquisitionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { 
     message: 'Formato de data inválido. Use AAAA-MM-DD' 
   }),
@@ -43,7 +48,8 @@ const formSchema = z.object({
   currentValue: z.string().refine(value => !isNaN(Number(value)) && Number(value) >= 0, {
     message: 'O valor atual deve ser um número positivo',
   }).optional(),
-  address: z.string().min(5, { message: 'Endereço deve ter pelo menos 5 caracteres' }),
+  street: z.string().min(3, { message: 'Rua deve ter pelo menos 3 caracteres' }),
+  number: z.string().min(1, { message: 'Número é obrigatório' }),
   city: z.string().min(2, { message: 'Cidade é obrigatória' }),
   state: z.string().min(2, { message: 'Estado é obrigatório' }),
   zipCode: z.string().min(5, { message: 'CEP é obrigatório' }),
@@ -56,23 +62,17 @@ const formSchema = z.object({
   bathrooms: z.string().refine(value => !isNaN(Number(value)) && Number(value) >= 0, {
     message: 'O número de banheiros deve ser um número não negativo',
   }),
-  description: z.string().optional(),
-  isRented: z.boolean().default(false),
-  rentAmount: z.string().refine(value => value === '' || (!isNaN(Number(value)) && Number(value) >= 0), {
-    message: 'O valor de aluguel deve ser um número não negativo',
+  valuationResponsible: z.string().optional(),
+  valuationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { 
+    message: 'Formato de data inválido. Use AAAA-MM-DD' 
+  }).optional(),
+  valuationDescription: z.string().optional(),
+  valuationValue: z.string().refine(value => value === '' || (!isNaN(Number(value)) && Number(value) >= 0), {
+    message: 'O valor da avaliação deve ser um número não negativo',
   }).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-const propertyTypes = [
-  { value: 'apartment', label: 'Apartamento' },
-  { value: 'house', label: 'Casa' },
-  { value: 'commercial', label: 'Comercial' },
-  { value: 'land', label: 'Terreno' },
-  { value: 'rural', label: 'Rural' },
-  { value: 'other', label: 'Outro' },
-];
 
 const brazilianStates = [
   { value: 'AC', label: 'Acre' },
@@ -121,24 +121,25 @@ const PropertyForm = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: initialData?.name || '',
-      propertyType: initialData?.propertyType || '',
+      registrationDate: initialData?.registrationDate || today,
+      registrationValue: initialData?.registrationValue || '',
       acquisitionDate: initialData?.acquisitionDate || today,
       purchaseValue: initialData?.purchaseValue || '',
       currentValue: initialData?.currentValue || '',
-      address: initialData?.address || '',
+      street: initialData?.street || '',
+      number: initialData?.number || '',
       city: initialData?.city || '',
       state: initialData?.state || '',
       zipCode: initialData?.zipCode || '',
       size: initialData?.size || '',
       bedrooms: initialData?.bedrooms || '',
       bathrooms: initialData?.bathrooms || '',
-      description: initialData?.description || '',
-      isRented: initialData?.isRented || false,
-      rentAmount: initialData?.rentAmount || '',
+      valuationResponsible: initialData?.valuationResponsible || '',
+      valuationDate: initialData?.valuationDate || today,
+      valuationDescription: initialData?.valuationDescription || '',
+      valuationValue: initialData?.valuationValue || '',
     },
   });
-  
-  const isRented = form.watch('isRented');
 
   return (
     <Form {...form}>
@@ -169,33 +170,35 @@ const PropertyForm = ({
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="propertyType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Imóvel</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="registrationDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data da Matrícula</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um tipo" />
-                          </SelectTrigger>
+                          <Input type="date" {...field} max={today} />
                         </FormControl>
-                        <SelectContent>
-                          {propertyTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="registrationValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Valor da Matrícula (R$)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
@@ -243,24 +246,6 @@ const PropertyForm = ({
                     </FormItem>
                   )}
                 />
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descrição</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Detalhes adicionais sobre o imóvel..." 
-                          className="resize-none" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             </CardContent>
           </Card>
@@ -273,19 +258,35 @@ const PropertyForm = ({
               </h3>
               
               <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Endereço</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Rua, número, complemento" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="street"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rua</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome da rua" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número</FormLabel>
+                        <FormControl>
+                          <Input placeholder="123" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
@@ -419,13 +420,6 @@ const PropertyForm = ({
                     )}
                   />
                 </div>
-                
-                <div className="pt-4">
-                  <Button variant="outline" type="button" className="w-full flex items-center justify-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    Adicionar Fotos
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -433,50 +427,71 @@ const PropertyForm = ({
         
         <Card>
           <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <BuildingIcon className="mr-2 h-5 w-5" />
-              Informações de Aluguel
-            </h3>
-            
+            <h3 className="text-lg font-semibold mb-4">Avaliação</h3>
             <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="isRented"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <input
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Imóvel Alugado</FormLabel>
-                      <FormDescription>
-                        Marque esta opção se o imóvel está alugado atualmente
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              
-              {isRented && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="rentAmount"
+                  name="valuationResponsible"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Valor do Aluguel Mensal (R$)</FormLabel>
+                      <FormLabel>Responsável pela Avaliação</FormLabel>
                       <FormControl>
-                        <Input type="number" min="0" step="0.01" {...field} />
+                        <Input placeholder="Nome do responsável" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
+                
+                <FormField
+                  control={form.control}
+                  name="valuationDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data da Avaliação</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} max={today} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="valuationDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição da Avaliação</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Detalhes da avaliação" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="valuationValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor da Avaliação (R$)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="pt-4">
+                <Button variant="outline" type="button" className="w-full flex items-center justify-center gap-2">
+                  Anexar Documento de Avaliação
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

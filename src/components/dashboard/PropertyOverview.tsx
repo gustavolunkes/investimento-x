@@ -5,16 +5,13 @@ import {
   DollarSign,
   Home,
   Percent,
-  TrendingUp,
-  Users
+  TrendingUp
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import StatCard from './StatCard';
 
 export interface PropertyMetrics {
   totalProperties: number;
   totalValue: number;
-  occupancyRate: number;
   monthlyIncome: number;
   annualReturn: number;
   valueGrowth: number;
@@ -24,7 +21,6 @@ export interface PropertyMetrics {
 const PropertyOverview = ({
   totalProperties,
   totalValue,
-  occupancyRate,
   monthlyIncome,
   annualReturn,
   valueGrowth,
@@ -55,13 +51,6 @@ const PropertyOverview = ({
           value: valueGrowth,
           positive: valueGrowth > 0
         }}
-        loading={loading}
-      />
-      
-      <StatCard
-        title="Taxa de Ocupação"
-        value={`${occupancyRate}%`}
-        icon={<Users className="h-6 w-6" />}
         loading={loading}
       />
       
