@@ -8,7 +8,7 @@ import {
   Receipt, 
   Wallet, 
   BarChart3, 
-  Settings, 
+  User, 
   ChevronLeft,
   ChevronRight,
   LogOut
@@ -66,7 +66,7 @@ const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
           <SidebarItem icon={<Receipt className="h-5 w-5" />} label="Receitas" path="/incomes" collapsed={collapsed} />
           <SidebarItem icon={<Wallet className="h-5 w-5" />} label="Despesas" path="/expenses" collapsed={collapsed} />
           <SidebarItem icon={<BarChart3 className="h-5 w-5" />} label="Análises" path="/analytics" collapsed={collapsed} />
-          <SidebarItem icon={<Settings className="h-5 w-5" />} label="Configurações" path="/settings" collapsed={collapsed} />
+          <SidebarItem icon={<User className="h-5 w-5" />} label="Perfil" path="/settings" collapsed={collapsed} />
         </ul>
       </nav>
 

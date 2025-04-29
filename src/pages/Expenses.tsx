@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
@@ -5,25 +6,13 @@ import TransactionList, { Transaction } from '@/components/transactions/Transact
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const expenseTransactions: Transaction[] = [
@@ -89,38 +78,7 @@ const expenseTransactions: Transaction[] = [
   },
 ];
 
-const monthlyExpenseData = [
-  { month: 'Jan', value: 1800 },
-  { month: 'Fev', value: 1850 },
-  { month: 'Mar', value: 1920 },
-  { month: 'Abr', value: 1750 },
-  { month: 'Mai', value: 2100 },
-  { month: 'Jun', value: 1880 },
-  { month: 'Jul', value: 0 },
-  { month: 'Ago', value: 0 },
-  { month: 'Set', value: 0 },
-  { month: 'Out', value: 0 },
-  { month: 'Nov', value: 0 },
-  { month: 'Dez', value: 0 },
-];
-
-const expenseCategoriesData = [
-  { name: 'Condomínio', value: 1600 },
-  { name: 'Impostos', value: 700 },
-  { name: 'Manutenção', value: 450 },
-  { name: 'Seguros', value: 280 },
-  { name: 'Outros', value: 150 },
-];
-
-const EXPENSE_COLORS = ['#0D9488', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1'];
-
-const expenseSummary = {
-  totalExpenses: 3180,
-  averageMonthly: 1880,
-  yearToDate: 11300,
-  expenseRatio: 32.5,
-};
-
+// Tax summary data
 const taxSummary = {
   iptuTotal: 4200,
   iptuPaid: 2100,
@@ -203,6 +161,47 @@ const Expenses = () => {
             </CardContent>
           </Card>
         </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Lista de Despesas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="list" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="list">Lista</TabsTrigger>
+                <TabsTrigger value="detailed">Detalhada</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="list" className="space-y-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Imóvel</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {expenseTransactions.map((expense) => (
+                      <TableRow key={expense.id}>
+                        <TableCell>{expense.description}</TableCell>
+                        <TableCell className="text-expense font-medium">
+                          {formatCurrency(expense.amount)}
+                        </TableCell>
+                        <TableCell>{expense.propertyName}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              
+              <TabsContent value="detailed">
+                <TransactionList transactions={expenseTransactions} />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bell, Search, User } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -39,11 +39,7 @@ const Header = ({ sidebarCollapsed }: HeaderProps) => {
         </div>
       </div>
       
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Bell className="h-5 w-5" />
-        </Button>
-        
+      <div className="flex items-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -59,7 +55,6 @@ const Header = ({ sidebarCollapsed }: HeaderProps) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/settings')}>Perfil</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/settings')}>Configurações</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()}>Sair</DropdownMenuItem>
           </DropdownMenuContent>
