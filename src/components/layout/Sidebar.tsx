@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -7,7 +6,6 @@ import {
   Building2, 
   Receipt, 
   Wallet, 
-  BarChart3, 
   User, 
   ChevronLeft,
   ChevronRight,
@@ -65,7 +63,6 @@ const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
           <SidebarItem icon={<Building2 className="h-5 w-5" />} label="Meus Imóveis" path="/properties" collapsed={collapsed} />
           <SidebarItem icon={<Receipt className="h-5 w-5" />} label="Receitas" path="/incomes" collapsed={collapsed} />
           <SidebarItem icon={<Wallet className="h-5 w-5" />} label="Despesas" path="/expenses" collapsed={collapsed} />
-          <SidebarItem icon={<BarChart3 className="h-5 w-5" />} label="Análises" path="/analytics" collapsed={collapsed} />
           <SidebarItem icon={<User className="h-5 w-5" />} label="Perfil" path="/settings" collapsed={collapsed} />
         </ul>
       </nav>
