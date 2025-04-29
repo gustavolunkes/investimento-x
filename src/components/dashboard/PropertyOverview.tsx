@@ -15,6 +15,7 @@ export interface PropertyMetrics {
   monthlyIncome: number;
   annualReturn: number;
   valueGrowth: number;
+  occupancyRate?: number; // Added occupancyRate as an optional property
   loading?: boolean;
 }
 
@@ -24,6 +25,7 @@ const PropertyOverview = ({
   monthlyIncome,
   annualReturn,
   valueGrowth,
+  occupancyRate,
   loading = false
 }: PropertyMetrics) => {
   const formatCurrency = (value: number) => {
