@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Analytics from "./pages/Analytics";
 import PropertyAnalytics from "./pages/PropertyAnalytics";
 
+// Create a QueryClient with appropriate defaults
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
