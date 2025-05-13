@@ -1,39 +1,29 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { UserAttributes } from "@/service/route/user/user";
 // Tipos de usuário
-export type UserRole = 'admin' | 'owner';
+export type UserRole = "admin" | "owner";
 
 // Interface do usuário
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
 
 // Interface do contexto
 interface AuthContextProps {
-  user: User | null;
+  user: UserAttributes | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  isAdmin: boolean;
 }
 
 // Dados de exemplo para usuários
-const SAMPLE_USERS: User[] = [
+const SAMPLE_USERS: UserAttributes[] = [
   {
-    id: '1',
-    name: 'Administrador',
-    email: 'admin@exemplo.com',
-    role: 'admin',
+    id: "1",
+    name: "Administrador",
+    email: "admin@exemplo.com",
   },
   {
-    id: '2',
-    name: 'Proprietário Exemplo',
-    email: 'proprietario@exemplo.com',
-    role: 'owner',
+    id: "2",
+    name: "Proprietário Exemplo",
+    email: "proprietario@exemplo.com",
   },
 ];
 
@@ -44,19 +34,21 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
   return context;
 };
 
 // Provedor do contexto
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser] = useState<UserAttributes | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Verificar usuário no localStorage ao iniciar
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -68,16 +60,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       // Simula uma requisição de API
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       // Verifica o usuário pelos dados de exemplo
-      const foundUser = SAMPLE_USERS.find(u => u.email === email);
-      
+      const foundUser = SAMPLE_USERS.find((u) => u.email === email);
+
       if (foundUser) {
         setUser(foundUser);
-        localStorage.setItem('user', JSON.stringify(foundUser));
+        localStorage.setItem("user", JSON.stringify(foundUser));
       } else {
-        throw new Error('Credenciais inválidas');
+        throw new Error("Credenciais inválidas");
       }
     } catch (error) {
       throw error;
@@ -89,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Função de logout
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    localStorage.removeItem("user");
   };
 
   return (
@@ -99,7 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         logout,
-        isAdmin: user?.role === 'admin',
       }}
     >
       {children}
