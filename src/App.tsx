@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,8 +16,10 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Analytics from "./pages/Analytics";
 import PropertyAnalytics from "./pages/PropertyAnalytics";
+import { RequireAuth } from "./auth/requiredAuth";
+import Owners from "./pages/Owners";
+import OwnerDetails from "./pages/OwnerDetails";
 
-// Create a QueryClient with appropriate defaults
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -37,17 +38,36 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/properties/:propertyId" element={<PropertyDetails />} />
-            <Route path="/properties/:propertyId/incomes" element={<PropertyIncomes />} />
-            <Route path="/properties/:propertyId/expenses" element={<PropertyExpenses />} />
-            <Route path="/properties/:propertyId/analytics" element={<PropertyAnalytics />} />
-            <Route path="/incomes" element={<Incomes />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
+            <Route element={<RequireAuth />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/properties" element={<Properties />} />
+              <Route path="/owners" element={<Owners />} />
+              <Route
+                path="/properties/:propertyId"
+                element={<PropertyDetails />}
+              />
+              <Route
+                path="/owner/:ownerId"
+                element={<OwnerDetails />}
+              />
+              <Route
+                path="/properties/:propertyId/incomes"
+                element={<PropertyIncomes />}
+              />
+              <Route
+                path="/properties/:propertyId/expenses"
+                element={<PropertyExpenses />}
+              />
+              <Route
+                path="/properties/:propertyId/analytics"
+                element={<PropertyAnalytics />}
+              />
+              <Route path="/incomes" element={<Incomes />} />
+              <Route path="/expenses" element={<Expenses />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
           </Routes>
         </BrowserRouter>
       </AuthProvider>

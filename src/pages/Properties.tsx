@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Plus, Search, List } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import PropertyCard from "@/components/properties/PropertyCard";
@@ -19,6 +19,7 @@ import {
   PropertiesAttributes,
   PropertiesDTOAttributes,
 } from "@/service/route/properties/properties";
+import { AuthContext } from "@/contexts/AuthContext";
 
 const Properties = () => {
   const api = new Api();
@@ -31,13 +32,15 @@ const Properties = () => {
   const [editingProperty, setEditingProperty] =
     useState<PropertiesAttributes | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-
+  const { user } = useContext(AuthContext);
   const { toast } = useToast();
+
+  async function getProperties() {
+    const response = await api.propertie.getByUser();
+    setProperties(response);
+  }
+
   useEffect(() => {
-    async function getProperties() {
-      const response = await api.propertie.getByUser("4545d4rere");
-      setProperties(response);
-    }
     getProperties();
   }, []);
 
@@ -51,49 +54,58 @@ const Properties = () => {
 
   const handleDelete = (id: Number) => {
     if (window.confirm("Tem certeza que deseja excluir este imóvel?")) {
-      setProperties(properties.filter((p) => p.id_imovel !== id));
-      api.propertie.delete(id);
-      toast({
-        title: "Imóvel excluído",
-        description: "O imóvel foi removido com sucesso.",
-      });
+      api.propertie
+        .delete(id)
+        .then(() => {
+          toast({
+            title: "Imóvel excluído",
+            description: "O imóvel foi removido com sucesso.",
+            duration: 3000,
+          });
+          setProperties(properties.filter((p) => p.id_imovel !== id));
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            title: "Imóvel não excluído",
+            description: "Erro ao tentar excluir ímovel",
+            duration: 3000,
+          });
+        });
     }
   };
 
   async function handleFormSubmit(propertieDTO: PropertiesDTOAttributes) {
     setLoading(true);
 
-    setTimeout(() => {
-      console.log(propertieDTO);
-      api.propertie
-        .create(propertieDTO)
-        .then((response) => {
-          setProperties([...properties, response]);
-        })
-        .catch((error) => {
-          toast({
-            title: "Erro ao adicionar imovel:" + error,
-            description: "Tente novamento",
-          });
+    api.propertie
+      .create(propertieDTO)
+      .then((response) => {
+        toast({
+          title: "Imóvel adicionado",
+          description: "O novo imóvel foi adicionado com sucesso.",
+          duration: 3000,
         });
-
-      toast({
-        title: "Imóvel adicionado",
-        description: "O novo imóvel foi adicionado com sucesso.",
+        setLoading(false);
+        setOpenDialog(false);
+        getProperties();
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          title: "Erro ao adicionar imovel",
+          description: "Tente novamente",
+          duration: 3000,
+        });
+        setLoading(false);
       });
-
-      setLoading(false);
-      setOpenDialog(false);
-      setEditingProperty(null);
-    }, 1000);
   }
 
   return (
     <MainLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Meus Imóveis</h1>
-          //{" "}
+          <h1 className="text-3xl font-bold tracking-tight">Meus Imóveis</h1>{" "}
           <Button
             onClick={() => {
               setEditingProperty(null);
@@ -144,10 +156,11 @@ const Properties = () => {
         <div className={"flex flex-col gap-4"}>
           {properties?.map((property) => (
             <PropertyCard
-              key={property.nome_imovel}
+              key={property.id_imovel.toString()}
               imovel={property}
               layout={view}
               onDelete={handleDelete}
+              onEdit={handleEdit}
             />
           ))}
           {properties?.length === 0 && (
@@ -170,6 +183,7 @@ const Properties = () => {
             </DialogDescription>
           </DialogHeader>
           <PropertyForm
+            setOpenDialog={setOpenDialog}
             onSubmit={handleFormSubmit}
             isSubmitting={loading}
             initialData={undefined}

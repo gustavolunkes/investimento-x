@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Home, MapPin } from "lucide-react";
+import { Home, MapPin, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -32,73 +32,37 @@ import { cn } from "@/lib/utils";
 import { CommandList } from "cmdk";
 import { CityAttributes } from "@/service/route/city/city";
 import { Api } from "@/service/api";
-import { PropertiesDTOAttributes } from "@/service/route/properties/properties";
+import {
+  PropertiesAttributes,
+  PropertiesDTOAttributes,
+} from "@/service/route/properties/properties";
+import { AuthContext } from "@/contexts/AuthContext";
+import { OwnerAttributes } from "@/service/route/owner/owner";
 
 const formSchema = z.object({
-  name: z
+  nomeImovel: z
     .string()
     .min(3, { message: "O nome deve ter pelo menos 3 caracteres" }),
-  registrationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
-    message: "Formato de data inválido. Use AAAA-MM-DD",
-  }),
-  registrationValue: z
+  valueRegistration: z
     .string()
     .refine((value) => !isNaN(Number(value)) && Number(value) > 0, {
       message: "O valor da matrícula deve ser um número positivo",
     }),
-  acquisitionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
+  dateValue: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
     message: "Formato de data inválido. Use AAAA-MM-DD",
   }),
-  purchaseValue: z
-    .string()
-    .refine((value) => !isNaN(Number(value)) && Number(value) > 0, {
-      message: "O valor de compra deve ser um número positivo",
-    }),
-  currentValue: z
-    .string()
-    .refine((value) => !isNaN(Number(value)) && Number(value) >= 0, {
-      message: "O valor atual deve ser um número positivo",
-    })
-    .optional(),
   street: z
     .string()
-    .min(3, { message: "Rua deve ter pelo menos 3 caracteres" }),
+    .min(2, { message: "Rua deve ter pelo menos 2 caracteres" }),
+
+  neighborhood: z
+    .string()
+    .min(2, { message: "Bairro deve ter pelo menos 2 caracteres" }),
   number: z.string().min(1, { message: "Número é obrigatório" }),
   city: z.string().min(2, { message: "Cidade é obrigatória" }),
   state: z.string().min(2, { message: "Estado é obrigatório" }),
-  zipCode: z.string().min(5, { message: "CEP é obrigatório" }),
-  size: z
-    .string()
-    .refine((value) => !isNaN(Number(value)) && Number(value) > 0, {
-      message: "O tamanho deve ser um número positivo",
-    }),
-  bedrooms: z
-    .string()
-    .refine((value) => !isNaN(Number(value)) && Number(value) >= 0, {
-      message: "O número de quartos deve ser um número não negativo",
-    }),
-  bathrooms: z
-    .string()
-    .refine((value) => !isNaN(Number(value)) && Number(value) >= 0, {
-      message: "O número de banheiros deve ser um número não negativo",
-    }),
-  valuationResponsible: z.string().optional(),
-  valuationDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, {
-      message: "Formato de data inválido. Use AAAA-MM-DD",
-    })
-    .optional(),
-  valuationDescription: z.string().optional(),
-  valuationValue: z
-    .string()
-    .refine(
-      (value) => value === "" || (!isNaN(Number(value)) && Number(value) >= 0),
-      {
-        message: "O valor da avaliação deve ser um número não negativo",
-      }
-    )
-    .optional(),
+  cep: z.string().min(5, { message: "CEP é obrigatório" }),
+  owner: z.string().min(1, "Proprietário é obrigátorio"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -134,56 +98,77 @@ const brazilianStates = [
 ];
 
 interface PropertyFormProps {
-  initialData?: Partial<FormValues>;
+  initialData?: PropertiesAttributes | null;
   onSubmit: (propertieDto: PropertiesDTOAttributes) => void;
   isSubmitting?: boolean;
+  setOpenDialog?: any;
 }
 
 const PropertyForm = ({
   initialData,
   onSubmit,
   isSubmitting = false,
+  setOpenDialog,
 }: PropertyFormProps) => {
+  const { user } = useContext(AuthContext);
   const api = new Api();
   const today = new Date().toISOString().split("T")[0];
-  const [propertieDTO, setPropertieDTO] = useState<PropertiesDTOAttributes>(
-    {} as PropertiesDTOAttributes
-  );
+  const [propertieDTO, setPropertieDTO] = useState<PropertiesDTOAttributes>({
+    nomeImovel: "",
+    street: "",
+    number: 0,
+    neighborhood: "",
+    valueRegistration: "",
+    dateValue: new Date(),
+    cityId: 0,
+    cep: 0,
+    userId: user.id,
+    ownerId: 0,
+  });
+
   const updateDTO = (field: keyof PropertiesDTOAttributes, value: any) => {
     setPropertieDTO((prev) => ({ ...prev, [field]: value }));
   };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: initialData?.name || "",
-      registrationDate: initialData?.registrationDate || today,
-      registrationValue: initialData?.registrationValue || "",
-      acquisitionDate: initialData?.acquisitionDate || today,
-      purchaseValue: initialData?.purchaseValue || "",
-      currentValue: initialData?.currentValue || "",
-      street: initialData?.street || "",
-      number: initialData?.number || "",
-      city: initialData?.city || "",
-      state: initialData?.state || "",
-      zipCode: initialData?.zipCode || "",
-      size: initialData?.size || "",
-      valuationResponsible: initialData?.valuationResponsible || "",
-      valuationDate: initialData?.valuationDate || today,
-      valuationDescription: initialData?.valuationDescription || "",
-      valuationValue: initialData?.valuationValue || "",
+      cep: "",
+      city: "",
+      dateValue: "",
+      nomeImovel: "",
+      number: "",
+      state: "",
+      street: "",
+      valueRegistration: "",
+      neighborhood: "",
+      owner: "",
     },
-  });
+  }); 
 
   const [city, setCity] = useState<CityAttributes[]>([]);
+  const [owners, setOwners] = useState<OwnerAttributes[]>([]);
 
   async function handleCity(id: Number) {
     const response = await api.city.getByState(id);
     setCity(response);
   }
 
+  useEffect(() => {
+    async function getOwners() {
+      const response = await api.owner.getOwners();
+      setOwners(response);
+    }
+    getOwners();
+  }, []);
+
+
   return (
     <Form {...form}>
-      <form onSubmit={() => onSubmit(propertieDTO)} className="space-y-8">
+      <form
+        onSubmit={form.handleSubmit(() => onSubmit(propertieDTO))}
+        className="space-y-8"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardContent className="pt-6">
@@ -192,10 +177,10 @@ const PropertyForm = ({
                 Informações Básicas
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="nomeImovel"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nome do Imóvel</FormLabel>
@@ -220,12 +205,20 @@ const PropertyForm = ({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="registrationDate"
+                    name="dateValue"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Data da Matrícula</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} max={today} />
+                          <Input
+                            type="date"
+                            {...field}
+                            max={today}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              updateDTO("dateValue", new Date(e.target.value));
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -234,7 +227,7 @@ const PropertyForm = ({
 
                   <FormField
                     control={form.control}
-                    name="registrationValue"
+                    name="valueRegistration"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Valor da Matrícula (R$)</FormLabel>
@@ -255,6 +248,61 @@ const PropertyForm = ({
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="owner"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Proprietário</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? owners.find(
+                                    (owner) => owner.name === field.value
+                                  )?.name
+                                : "Selecione um proprietário"}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="flex p-2">
+                          <Command>
+                            <CommandInput placeholder="Buscar proprietário..." />
+                            <CommandEmpty className="grid grid-cols-1 space-y-2">
+                              <span>Nenhum proprietário cadastrado.</span>
+                              <Button>Cadastrar</Button>
+                            </CommandEmpty>
+                            <CommandList className="max-h-48 overflow-y-auto">
+                              <CommandGroup>
+                                {owners.map((owner) => (
+                                  <CommandItem
+                                    key={owner.id.toString()}
+                                    value={owner.name}
+                                    onSelect={(e) => {
+                                      field.onChange(e);
+                                      updateDTO("ownerId", owner.id);
+                                    }}
+                                  >
+                                    {owner.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
@@ -266,7 +314,7 @@ const PropertyForm = ({
                 Localização e Características
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -310,62 +358,30 @@ const PropertyForm = ({
                     )}
                   />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4">
                   <FormField
                     control={form.control}
-                    name="city"
+                    name="neighborhood"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cidade</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className={cn(
-                                  "w-full justify-between",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value
-                                  ? city.find(
-                                      (city) => city.nome === field.value
-                                    )?.nome
-                                  : "Selecione uma cidade"}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
-                            <Command>
-                              <CommandInput placeholder="Buscar estado..." />
-                              <CommandEmpty>
-                                Nenhuma cidade encontrada.
-                              </CommandEmpty>
-                              <CommandList className="max-h-48 overflow-y-auto">
-                                <CommandGroup>
-                                  {city.map((city) => (
-                                    <CommandItem
-                                      key={city.nome}
-                                      value={city.nome}
-                                      onSelect={() => {
-                                        form.setValue("city", city.nome);
-                                        updateDTO("cityId", city.id);
-                                      }}
-                                    >
-                                      {city.nome}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <FormLabel>Bairro</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Nome do bairro"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              updateDTO("neighborhood", e.target.value);
+                            }}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                </div>
+
+
 
                   <FormField
                     control={form.control}
@@ -421,10 +437,65 @@ const PropertyForm = ({
                       </FormItem>
                     )}
                   />
-                </div>
+               
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cidade</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value
+                                  ? city.find(
+                                      (city) => city.nome === field.value
+                                    )?.nome
+                                  : "Selecione uma cidade"}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Buscar cidade..." />
+                              <CommandEmpty>
+                                Nenhuma cidade encontrada.
+                              </CommandEmpty>
+                              <CommandList className="max-h-48 overflow-y-auto">
+                                <CommandGroup>
+                                  {city.map((city) => (
+                                    <CommandItem
+                                      key={city.nome}
+                                      value={city.nome}
+                                      onSelect={(e) => {
+                                        field.onChange(e);
+                                        updateDTO("cityId", city.id);
+                                      }}
+                                    >
+                                      {city.nome}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                 <FormField
                   control={form.control}
-                  name="zipCode"
+                  name="cep"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>CEP</FormLabel>
@@ -447,91 +518,12 @@ const PropertyForm = ({
           </Card>
         </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-4">Avaliação</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="valuationResponsible"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Responsável pela Avaliação</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do responsável" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="valuationDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data da Avaliação</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          max={today}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            updateDTO("dateValue", e.target.value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="valuationDescription"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição da Avaliação</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Detalhes da avaliação" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="valuationValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor da Avaliação (R$)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="pt-4">
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="w-full flex items-center justify-center gap-2"
-                >
-                  Anexar Documento de Avaliação
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="flex justify-end gap-4">
-          <Button variant="outline" type="button">
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => setOpenDialog(false)}
+          >
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting}>

@@ -1,356 +1,221 @@
-
-import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, UserPlus, Eye } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import MainLayout from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect, useContext } from "react";
+import { Plus, Search, List } from "lucide-react";
+import MainLayout from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { Api } from "@/service/api";
+import OwnerCard from "@/components/owners/OwnerCard";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { useToast } from '@/components/ui/use-toast';
-
-// Exemplos de proprietários
-const ownersSample = [
-  {
-    id: '1',
-    name: 'João Silva',
-    email: 'joao@exemplo.com',
-    properties: 3,
-    lastAccess: '2023-06-15T14:30:00Z',
-  },
-  {
-    id: '2',
-    name: 'Maria Oliveira',
-    email: 'maria@exemplo.com',
-    properties: 5,
-    lastAccess: '2023-06-18T09:45:00Z',
-  },
-  {
-    id: '3',
-    name: 'Carlos Santos',
-    email: 'carlos@exemplo.com',
-    properties: 2,
-    lastAccess: '2023-06-14T16:20:00Z',
-  },
-  {
-    id: '4',
-    name: 'Ana Pereira',
-    email: 'ana@exemplo.com',
-    properties: 1,
-    lastAccess: '2023-06-17T11:10:00Z',
-  },
-  {
-    id: '5',
-    name: 'Roberto Ferreira',
-    email: 'roberto@exemplo.com',
-    properties: 4,
-    lastAccess: '2023-06-16T13:55:00Z',
-  },
-];
-
-// Esquema de validação para o formulário de proprietário
-const ownerFormSchema = z.object({
-  name: z.string().min(3, { message: 'O nome deve ter pelo menos 3 caracteres' }),
-  email: z.string().email({ message: 'Email inválido' }),
-  password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres' }),
-});
+  OwnerAttributes,
+  OwnerDTOAttributes,
+} from "@/service/route/owner/owner";
+import OwnerForm from "@/components/owners/OwnerForm";
 
 const Owners = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [owners, setOwners] = useState(ownersSample);
+  const api = new Api();
+
+  const [searchTerm, setSearchTerm] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [editingOwnerId, setEditingOwnerId] = useState<string | null>(null);
-
+  const [view, setView] = useState<"list">("list");
+  const [owners, setOwners] = useState<OwnerAttributes[]>();
+  const [editingProperty, setEditingProperty] =
+    useState<OwnerAttributes | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof ownerFormSchema>>({
-    resolver: zodResolver(ownerFormSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-    },
-  });
+  async function getOwners() {
+    const response = await api.owner.getOwners();
+    setOwners(response);
+  }
 
-  const handleEdit = (id: string) => {
-    const owner = owners.find(o => o.id === id);
-    if (owner) {
-      form.setValue('name', owner.name);
-      form.setValue('email', owner.email);
-      form.setValue('password', ''); // Não mostrar a senha atual por segurança
-      setEditingOwnerId(id);
+  useEffect(() => {
+    getOwners();
+  }, []);
+
+  const handleEdit = (id: Number) => {
+    const property = owners.find((o) => o.id === id);
+    if (property) {
+      setEditingProperty(property);
       setOpenDialog(true);
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este proprietário?')) {
-      setOwners(owners.filter(o => o.id !== id));
-      toast({
-        title: 'Proprietário excluído',
-        description: 'O proprietário foi removido com sucesso.',
+  const handleDelete = (id: Number) => {
+    api.owner
+      .deleteOwner(id)
+      .then(() => {
+        toast({
+          title: "Proprietário excluído",
+          description: "O proprietário foi removido com sucesso.",
+          duration: 3000,
+        });
+        setOwners(owners.filter((item) => item.id !== id));
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          title: "Proprietário não excluído",
+          description: "Erro ao tentar excluir proprietário",
+          duration: 3000,
+        });
       });
-    }
   };
 
-  const onSubmit = (data: z.infer<typeof ownerFormSchema>) => {
+  async function handleFormSubmitEdit(
+    ownerDTO: Partial<OwnerDTOAttributes>,
+    id?: number
+  ) {
     setLoading(true);
-    
-    // Simulando uma operação de API
-    setTimeout(() => {
-      if (editingOwnerId) {
-        // Atualizar proprietário existente
-        setOwners(owners.map(owner => 
-          owner.id === editingOwnerId 
-            ? { ...owner, name: data.name, email: data.email } 
-            : owner
-        ));
-        
+    api.owner
+      .editOwner(ownerDTO, id)
+      .then(() => {
         toast({
-          title: 'Proprietário atualizado',
-          description: 'As informações foram atualizadas com sucesso.',
+          title: "Proprietário editado",
+          description: "O proprietário editado com sucesso.",
+          duration: 3000,
         });
-      } else {
-        // Adicionar novo proprietário
-        const newOwner = {
-          id: `${owners.length + 1}`,
-          name: data.name,
-          email: data.email,
-          properties: 0,
-          lastAccess: new Date().toISOString(),
-        };
-        
-        setOwners([...owners, newOwner]);
-        
+        setLoading(false);
+        setOpenDialog(false);
+        getOwners();
+      })
+      .catch((error) => {
+        console.log(error);
         toast({
-          title: 'Proprietário adicionado',
-          description: 'O novo proprietário foi adicionado com sucesso.',
+          title: "Erro ao editar proprietário",
+          description: "Tente novamente",
+          duration: 3000,
         });
-      }
-      
-      form.reset();
-      setEditingOwnerId(null);
-      setLoading(false);
-      setOpenDialog(false);
-    }, 1000);
-  };
+        setLoading(false);
+      });
+    return;
+  }
 
-  const filteredOwners = owners.filter((owner) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      owner.name.toLowerCase().includes(searchLower) ||
-      owner.email.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  async function handleFormSubmit(ownerDTO: OwnerDTOAttributes, id?: number) {
+    setLoading(true);
+    api.owner
+      .createOwner(ownerDTO)
+      .then((response) => {
+        toast({
+          title: "Proprietário adicionado",
+          description: "O novo proprietário foi adicionado com sucesso.",
+          duration: 3000,
+        });
+        setLoading(false);
+        setOpenDialog(false);
+        getOwners();
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          title: "Erro ao adicionar proprietário",
+          description: "Tente novamente",
+          duration: 3000,
+        });
+        setLoading(false);
+      });
+  }
 
   return (
-    <MainLayout requireAdmin>
+    <MainLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Gerenciar Proprietários</h1>
-          <Button onClick={() => {
-            form.reset();
-            setEditingOwnerId(null);
-            setOpenDialog(true);
-          }} className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Adicionar Proprietário
+          <h1 className="text-3xl font-bold tracking-tight">Proprietários</h1>{" "}
+          <Button
+            onClick={() => {
+              setEditingProperty(null);
+              setOpenDialog(true);
+            }}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-5 w-5" />
+            Adicionar proprietário
           </Button>
         </div>
 
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Buscar proprietários..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Buscar proprietário..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-4 items-center">
+            <Tabs
+              defaultValue="all"
+              value={activeTab}
+              onValueChange={setActiveTab}
+            >
+              <TabsList>
+                <TabsTrigger value="all">Todos</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <div className="flex items-center border rounded-md">
+              <Button
+                variant={view === "list" ? "default" : "ghost"}
+                size="icon"
+                onClick={() => setView("list")}
+                className="rounded-md"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Proprietários</CardTitle>
-            <CardDescription>
-              Gerencie os proprietários que têm acesso ao sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Imóveis</TableHead>
-                  <TableHead>Último Acesso</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOwners.map((owner) => (
-                  <TableRow key={owner.id}>
-                    <TableCell className="font-medium">{owner.name}</TableCell>
-                    <TableCell>{owner.email}</TableCell>
-                    <TableCell>{owner.properties}</TableCell>
-                    <TableCell>{formatDate(owner.lastAccess)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          asChild
-                        >
-                          <Link to={`/owners/${owner.id}`}>
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleEdit(owner.id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="text-destructive"
-                          onClick={() => handleDelete(owner.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredOwners.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                      Nenhum proprietário encontrado
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className={"flex flex-col gap-4"}>
+          {owners?.map((owner) => (
+            <OwnerCard
+              key={owner.id.toString()}
+              owner={owner}
+              layout={view}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
+          ))}
+          {owners?.length === 0 && (
+            <div className="col-span-full text-center p-12 bg-muted rounded-lg">
+              <p className="text-muted-foreground">
+                Nenhum proprietário encontrado
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingOwnerId ? 'Editar Proprietário' : 'Adicionar Proprietário'}
+              {editingProperty
+                ? "Editar propretário"
+                : "Adicionar Novo Proprietário"}
             </DialogTitle>
             <DialogDescription>
-              {editingOwnerId
-                ? 'Atualize as informações do proprietário'
-                : 'Preencha os dados para adicionar um novo proprietário'}
+              Preencha os detalhes do proprietário.
             </DialogDescription>
           </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome completo" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="email@exemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{editingOwnerId ? 'Nova Senha (opcional)' : 'Senha'}</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="••••••" 
-                        {...field} 
-                        required={!editingOwnerId}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setOpenDialog(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Salvando...' : editingOwnerId ? 'Atualizar' : 'Adicionar'}
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <OwnerForm
+            setOpenDialog={setOpenDialog}
+            onSubmit={handleFormSubmit}
+            onSubmitEdit={handleFormSubmitEdit}
+            isSubmitting={loading}
+            initialData={editingProperty}
+          />
         </DialogContent>
       </Dialog>
     </MainLayout>

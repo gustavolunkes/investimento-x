@@ -32,15 +32,15 @@ export interface PropertyCardProps {
   onDelete?: (id: Number) => void;
   onLiquidate?: (id: Number) => void;
   className?: string;
+  local?: string;
 }
-
-
 
 const PropertyCard = ({
   imovel,
   onEdit,
   onDelete,
   className,
+  local,
 }: PropertyCardProps) => {
   const navigate = useNavigate();
 
@@ -58,14 +58,6 @@ const PropertyCard = ({
     navigate(`/properties/${imovel.id_imovel}`);
   };
 
-  const handleViewIncomes = () => {
-    navigate(`/properties/${imovel.id_imovel}/incomes`);
-  };
-
-  const handleViewExpenses = () => {
-    navigate(`/properties/${imovel.id_imovel}/expenses`);
-  };
-
   return (
     <Card className={cn("flex flex-row", className)}>
       <div className="relative h-auto w-28 bg-muted">
@@ -80,37 +72,43 @@ const PropertyCard = ({
           </h3>
           <div className="flex items-center text-sm text-muted-foreground mt-1">
             <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-            <span className="truncate">{imovel.adress.city.nome}</span>
+            <span className="truncate">{imovel.adress.toElegant()}</span>
           </div>
 
-          <div className="flex gap-4 mt-4">
-            <div>
-              <p className="text-xs text-muted-foreground">Valor da compra: {formatCurrency(valueGrowth.toString())}</p>
+          {valueGrowth && (
+            <div className="flex gap-4 mt-2">
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Valor da compra: {formatCurrency(valueGrowth.toString())}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
         <div className="flex flex-col justify-center pr-4 gap-2">
           <Button variant="outline" size="sm" onClick={handleViewProperty}>
             Ver detalhes
           </Button>
-         
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit && onEdit(imovel.id_imovel)}
-            >
-              Editar
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive"
-              onClick={() => onDelete && onDelete(imovel.id_imovel)}
-            >
-              Excluir
-            </Button>
-          </div>
+
+          {local != "owner" && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit && onEdit(imovel.id_imovel)}
+              >
+                Editar
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive"
+                onClick={() => onDelete && onDelete(imovel.id_imovel)}
+              >
+                Excluir
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>
