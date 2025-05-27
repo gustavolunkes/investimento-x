@@ -5,7 +5,6 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -14,22 +13,7 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children, requireAdmin = false }: MainLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { user, isAdmin, isLoading } = useAuth();
 
-  // Se estiver carregando, não renderiza nada
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
-  }
-
-  // Se não estiver autenticado, redireciona para o login
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  // Se a página requer administrador e o usuário não é admin, redireciona para a página inicial
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/" />;
-  }
 
   return (
     <div className="min-h-screen flex bg-background">
